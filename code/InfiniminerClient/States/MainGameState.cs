@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices; 
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Diagnostics;
 using StateMasher;
@@ -107,14 +107,14 @@ namespace Infiniminer.States
                     if (_P.radarValue == 200)
                         _P.PlaySound(InfiniminerSound.RadarLow);
                     if (_P.radarValue == 1000)
-                        _P.PlaySound(InfiniminerSound.RadarHigh);   
+                        _P.PlaySound(InfiniminerSound.RadarHigh);
                 }
             }
 
             // Update the player"s position.
             if (!_P.playerDead)
                 UpdatePlayerPosition(gameTime, keyState);
-            
+
             // Update the camera regardless of if we"re alive or not.
             _P.UpdateCamera(gameTime);
 
@@ -125,6 +125,7 @@ namespace Infiniminer.States
         {
             // Double-speed move flag, set if we're on road.
             bool movingOnRoad = false;
+            bool sprinting = false;
 
             // Apply "gravity".
             _P.playerVelocity.Y += GRAVITY * (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -134,7 +135,7 @@ namespace Infiniminer.States
             {
                 BlockType standingOnBlock = _P.blockEngine.BlockAtPoint(footPosition);
                 BlockType hittingHeadOnBlock = _P.blockEngine.BlockAtPoint(headPosition);
-                
+
                 // If we"re hitting the ground with a high velocity, die!
                 if (standingOnBlock != BlockType.None && _P.playerVelocity.Y < 0)
                 {
@@ -161,7 +162,7 @@ namespace Infiniminer.States
                     int blockIn = (int)(headPosition.Y);
                     _P.playerPosition.Y = (float)(blockIn - 0.15f);
                 }
-                
+
                 // If the player is stuck in the ground, bring them out.
                 // This happens because we"re standing on a block at -1.5, but stuck in it at -1.4, so -1.45 is the sweet spot.
                 if (_P.blockEngine.SolidAtPointForPlayer(footPosition))
@@ -169,7 +170,7 @@ namespace Infiniminer.States
                     int blockOn = (int)(footPosition.Y);
                     _P.playerPosition.Y = (float)(blockOn + 1 + 1.45);
                 }
-                
+
                 _P.playerVelocity.Y = 0;
 
                 // Logic for standing on a block.
@@ -212,7 +213,7 @@ namespace Infiniminer.States
                         _P.KillPlayer("WAS INCINERATED BY LAVA!");
                         return;
                 }
-            }                
+            }
             _P.playerPosition += _P.playerVelocity * (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             // Death by falling off the map.
@@ -235,8 +236,10 @@ namespace Infiniminer.States
                     moveVector += _P.playerCamera.GetRightVector();
                 if (keyState.IsKeyDown(Keys.A))
                     moveVector -= _P.playerCamera.GetRightVector();
+                if (keyState.IsKeyDown(Keys.LeftShift) || keyState.IsKeyDown(Keys.RightShift))
+                    sprinting = true;
             }
-            
+
             if (moveVector.X != 0 || moveVector.Z != 0)
             {
                 // "Flatten" the movement vector so that we don"t move up/down.
@@ -244,6 +247,9 @@ namespace Infiniminer.States
                 moveVector.Normalize();
                 moveVector *= MOVESPEED * (float)gameTime.ElapsedGameTime.TotalSeconds;
                 if (movingOnRoad)
+                    moveVector *= 2;
+                // Sprinting doubles speed, even if already on road
+                if (sprinting)
                     moveVector *= 2;
 
                 // Attempt to move, doing collision stuff.
@@ -307,7 +313,7 @@ namespace Infiniminer.States
                 return true;
             }
 
-            return false;         
+            return false;
         }
 
         public override void OnRenderAtEnter(GraphicsDevice graphicsDevice)
@@ -356,7 +362,7 @@ namespace Infiniminer.States
                         msgBuffer.Write(_P.chatEntryBuffer);
                         _P.netClient.SendMessage(msgBuffer, NetChannel.ReliableInOrder3);
                     }
-                    
+
                     _P.chatEntryBuffer = "";
                     _P.chatMode = ChatMessageType.None;
                 }
@@ -406,6 +412,28 @@ namespace Infiniminer.States
                         _P.playerToolSelected = 0;
                 }
 
+                // Change weapon directly!
+                if (key == Keys.D1 || key == Keys.D2 || key == Keys.D3 || key == Keys.D4 || key == Keys.D5)
+                {
+                    _P.PlaySound(InfiniminerSound.ClickLow);
+                    switch (key)
+                    {
+                        case Keys.D1:
+                            _P.playerToolSelected = 0; break;
+                        case Keys.D2:
+                            _P.playerToolSelected = 1; break;
+                        case Keys.D3:
+                            _P.playerToolSelected = 2; break;
+                        case Keys.D4:
+                            _P.playerToolSelected = 3; break;
+                        case Keys.D5:
+                            _P.playerToolSelected = 4; break;
+                    }
+                    // Make sure we don't go out of bounds
+                    if (_P.playerToolSelected >= _P.playerTools.Length)
+                        _P.playerToolSelected = _P.playerTools.Length - 1;
+                }
+
                 // Change block type!
                 if (key == Keys.R && _P.playerTools[_P.playerToolSelected] == PlayerTools.ConstructionGun)
                 {
@@ -418,12 +446,13 @@ namespace Infiniminer.States
                 // Deposit and withdraw from a bank.
                 if (_P.AtBankTerminal())
                 {
-                    if (key == Keys.D1)
+                    //Now plus and minus keys
+                    if (key == Keys.Add)
                     {
                         _P.DepositOre();
                         _P.PlaySound(InfiniminerSound.ClickHigh);
                     }
-                    if (key == Keys.D2)
+                    if (key == Keys.Subtract)
                     {
                         _P.WithdrawOre();
                         _P.PlaySound(InfiniminerSound.ClickHigh);
@@ -451,7 +480,7 @@ namespace Infiniminer.States
 
         public override void OnKeyUp(Keys key)
         {
-            
+
         }
 
         public override void OnMouseDown(MouseButton button, int x, int y)
@@ -468,7 +497,7 @@ namespace Infiniminer.States
                     //    break;
 
                     case PlayerTools.ConstructionGun:
-                        _P.FireConstructionGun(_P.playerBlocks[_P.playerBlockSelected]);
+                        _P.FireConstructionGun(_P.playerBlocks[_P.playerBlockSelected], !(button == MouseButton.LeftButton));//_P.FireConstructionGun(_P.playerBlocks[_P.playerBlockSelected]);
                         break;
 
                     case PlayerTools.DeconstructionGun:
@@ -484,8 +513,8 @@ namespace Infiniminer.States
                         _P.FireRadar();
                         break;
                 }
-            }     
-       
+            }
+
             // If we"re dead, come back to life.
             if (_P.playerDead && _P.screenEffectCounter > 2)
             {
@@ -495,7 +524,7 @@ namespace Infiniminer.States
 
         public override void OnMouseUp(MouseButton button, int x, int y)
         {
-            
+
         }
 
         public override void OnMouseScroll(int scrollDelta)
@@ -516,7 +545,7 @@ namespace Infiniminer.States
                 _P.PlaySound(InfiniminerSound.ClickLow);
                 _P.playerBlockSelected -= 1;
                 if (_P.playerBlockSelected < 0)
-                    _P.playerBlockSelected = _P.playerBlocks.Length-1;
+                    _P.playerBlockSelected = _P.playerBlocks.Length - 1;
             }
         }
     }

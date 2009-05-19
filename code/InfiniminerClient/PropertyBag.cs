@@ -100,7 +100,7 @@ namespace Infiniminer
         DepositCash,
         WithdrawOre,
         TriggerExplosion,       // position
-        
+
         PlayerUpdate,           // (uint id for server), position, heading, current tool, animate using (bool): UnreliableInOrder1
         PlayerJoined,           // uint id, player name :ReliableInOrder2
         PlayerLeft,             // uint id              :ReliableInOrder2
@@ -122,8 +122,8 @@ namespace Infiniminer
         public PlayerTeam Team;
     }
 
-	public class PropertyBag
-	{
+    public class PropertyBag
+    {
         // Game engines.
         public BlockEngine blockEngine = null;
         public InterfaceEngine interfaceEngine = null;
@@ -143,7 +143,7 @@ namespace Infiniminer
         public PlayerClass playerClass;
         public PlayerTools[] playerTools = new PlayerTools[1] { PlayerTools.Pickaxe };
         public int playerToolSelected = 0;
-        public BlockType[] playerBlocks = new BlockType[1] {BlockType.None};
+        public BlockType[] playerBlocks = new BlockType[1] { BlockType.None };
         public int playerBlockSelected = 0;
         public PlayerTeam playerTeam = PlayerTeam.Red;
         public bool playerDead = true;
@@ -187,7 +187,7 @@ namespace Infiniminer
         {
             // Initialize our network device.
             NetConfiguration netConfig = new NetConfiguration("InfiniminerPlus");
-            
+
             netClient = new NetClient(netConfig);
             netClient.SetMessageTypeEnabled(NetMessageType.ConnectionRejected, true);
             //netClient.SimulatedMinimumLatency = 0.1f;
@@ -359,7 +359,7 @@ namespace Infiniminer
                         newPosition.X += (float)(2 - screenEffectCounter) * (float)(randGen.NextDouble() - 0.5) * 0.5f;
                         newPosition.Y += (float)(2 - screenEffectCounter) * (float)(randGen.NextDouble() - 0.5) * 0.5f;
                         newPosition.Z += (float)(2 - screenEffectCounter) * (float)(randGen.NextDouble() - 0.5) * 0.5f;
-                        if (!blockEngine.SolidAtPointForPlayer(newPosition) && (newPosition-playerPosition).Length() < 0.7f)
+                        if (!blockEngine.SolidAtPointForPlayer(newPosition) && (newPosition - playerPosition).Length() < 0.7f)
                             playerCamera.Position = newPosition;
                     }
                     // For 2 to 3, move the camera back.
@@ -431,6 +431,82 @@ namespace Infiniminer
             netClient.SendMessage(msgBuffer, NetChannel.ReliableUnordered);
         }
 
+        public bool allWeps = false; //Needs to be true on sandbox servers, though that requires a server mod
+
+        public void equipWeps()
+        {
+            playerToolSelected = 0;
+            playerBlockSelected = 0;
+            if (allWeps)
+            {
+                playerTools = new PlayerTools[5] { PlayerTools.Pickaxe,
+                PlayerTools.ConstructionGun,
+                PlayerTools.DeconstructionGun,
+                PlayerTools.ProspectingRadar,
+                PlayerTools.Detonator };
+
+                playerBlocks = new BlockType[12] {   playerTeam == PlayerTeam.Red ? BlockType.SolidRed : BlockType.SolidBlue,
+                                             playerTeam == PlayerTeam.Red ? BlockType.TransRed : BlockType.TransBlue,
+                                             BlockType.Road,
+                                             BlockType.Ladder,
+                                             BlockType.Jump,
+                                             BlockType.Shock,
+                                             playerTeam == PlayerTeam.Red ? BlockType.BeaconRed : BlockType.BeaconBlue,
+                                             playerTeam == PlayerTeam.Red ? BlockType.BankRed : BlockType.BankBlue,
+                                             BlockType.Explosive,
+                                             BlockType.Road,
+                                             BlockType.Lava,
+                                             BlockType.Dirt };
+            }
+            else
+            {
+                switch (playerClass)
+                {
+                    case PlayerClass.Prospector:
+                        playerTools = new PlayerTools[3] {  PlayerTools.Pickaxe,
+                                                        PlayerTools.ConstructionGun,
+                                                        PlayerTools.ProspectingRadar     };
+                        playerBlocks = new BlockType[4] {   playerTeam == PlayerTeam.Red ? BlockType.SolidRed : BlockType.SolidBlue,
+                                                        playerTeam == PlayerTeam.Red ? BlockType.TransRed : BlockType.TransBlue,
+                                                        playerTeam == PlayerTeam.Red ? BlockType.BeaconRed : BlockType.BeaconBlue,
+                                                        BlockType.Ladder    };
+                        break;
+
+                    case PlayerClass.Miner:
+                        playerTools = new PlayerTools[2] {  PlayerTools.Pickaxe,
+                                                        PlayerTools.ConstructionGun     };
+                        playerBlocks = new BlockType[3] {   playerTeam == PlayerTeam.Red ? BlockType.SolidRed : BlockType.SolidBlue,
+                                                        playerTeam == PlayerTeam.Red ? BlockType.TransRed : BlockType.TransBlue,
+                                                        BlockType.Ladder    };
+                        break;
+
+                    case PlayerClass.Engineer:
+                        playerTools = new PlayerTools[3] {  PlayerTools.Pickaxe,
+                                                        PlayerTools.ConstructionGun,     
+                                                        PlayerTools.DeconstructionGun   };
+                        playerBlocks = new BlockType[8] {   playerTeam == PlayerTeam.Red ? BlockType.SolidRed : BlockType.SolidBlue,
+                                                        playerTeam == PlayerTeam.Red ? BlockType.TransRed : BlockType.TransBlue, //Only need one entry due to right-click
+                                                        BlockType.Road,
+                                                        BlockType.Ladder,
+                                                        BlockType.Jump,
+                                                        BlockType.Shock,
+                                                        playerTeam == PlayerTeam.Red ? BlockType.BeaconRed : BlockType.BeaconBlue,
+                                                        playerTeam == PlayerTeam.Red ? BlockType.BankRed : BlockType.BankBlue  };
+                        break;
+
+                    case PlayerClass.Sapper:
+                        playerTools = new PlayerTools[3] {  PlayerTools.Pickaxe,
+                                                        PlayerTools.ConstructionGun,
+                                                        PlayerTools.Detonator     };
+                        playerBlocks = new BlockType[4] {   playerTeam == PlayerTeam.Red ? BlockType.SolidRed : BlockType.SolidBlue,
+                                                        playerTeam == PlayerTeam.Red ? BlockType.TransRed : BlockType.TransBlue,
+                                                        BlockType.Ladder,
+                                                        BlockType.Explosive     };
+                        break;
+                }
+            }
+        }
+
         public void SetPlayerClass(PlayerClass playerClass)
         {
             if (netClient.Status != NetConnectionStatus.Connected)
@@ -446,51 +522,7 @@ namespace Infiniminer
             playerToolSelected = 0;
             playerBlockSelected = 0;
 
-            switch (playerClass)
-            {
-                case PlayerClass.Prospector:
-                    playerTools = new PlayerTools[3] {  PlayerTools.Pickaxe,
-                                                        PlayerTools.ConstructionGun,
-                                                        PlayerTools.ProspectingRadar     };
-                    playerBlocks = new BlockType[4] {   playerTeam == PlayerTeam.Red ? BlockType.SolidRed : BlockType.SolidBlue,
-                                                        playerTeam == PlayerTeam.Red ? BlockType.TransRed : BlockType.TransBlue,
-                                                        playerTeam == PlayerTeam.Red ? BlockType.BeaconRed : BlockType.BeaconBlue,
-                                                        BlockType.Ladder    };
-                    break;
-
-                case PlayerClass.Miner:
-                    playerTools = new PlayerTools[2] {  PlayerTools.Pickaxe,
-                                                        PlayerTools.ConstructionGun     };
-                    playerBlocks = new BlockType[3] {   playerTeam == PlayerTeam.Red ? BlockType.SolidRed : BlockType.SolidBlue,
-                                                        playerTeam == PlayerTeam.Red ? BlockType.TransRed : BlockType.TransBlue,
-                                                        BlockType.Ladder    };
-                    break;
-
-                case PlayerClass.Engineer:
-                    playerTools = new PlayerTools[3] {  PlayerTools.Pickaxe,
-                                                        PlayerTools.ConstructionGun,     
-                                                        PlayerTools.DeconstructionGun   };
-                    playerBlocks = new BlockType[9] {   playerTeam == PlayerTeam.Red ? BlockType.SolidRed : BlockType.SolidBlue,
-                                                        BlockType.TransRed,
-                                                        BlockType.TransBlue,
-                                                        BlockType.Road,
-                                                        BlockType.Ladder,
-                                                        BlockType.Jump,
-                                                        BlockType.Shock,
-                                                        playerTeam == PlayerTeam.Red ? BlockType.BeaconRed : BlockType.BeaconBlue,
-                                                        playerTeam == PlayerTeam.Red ? BlockType.BankRed : BlockType.BankBlue  };
-                    break;
-
-                case PlayerClass.Sapper:
-                    playerTools = new PlayerTools[3] {  PlayerTools.Pickaxe,
-                                                        PlayerTools.ConstructionGun,
-                                                        PlayerTools.Detonator     };
-                    playerBlocks = new BlockType[4] {   playerTeam == PlayerTeam.Red ? BlockType.SolidRed : BlockType.SolidBlue,
-                                                        playerTeam == PlayerTeam.Red ? BlockType.TransRed : BlockType.TransBlue,
-                                                        BlockType.Ladder,
-                                                        BlockType.Explosive     };
-                    break;
-            }
+            equipWeps();
         }
 
         public void FireRadar()
@@ -522,11 +554,19 @@ namespace Infiniminer
             msgBuffer.Write(playerCamera.GetLookVector());
             msgBuffer.Write((byte)PlayerTools.Pickaxe);
             msgBuffer.Write((byte)BlockType.None);
-            netClient.SendMessage(msgBuffer, NetChannel.ReliableUnordered); 
+            netClient.SendMessage(msgBuffer, NetChannel.ReliableUnordered);
         }
 
         public void FireConstructionGun(BlockType blockType)
         {
+            FireConstructionGun(blockType, false);
+        }
+
+        public void FireConstructionGun(BlockType blockType, bool alternate)
+        {
+            if (netClient.Status != NetConnectionStatus.Connected)
+                return;
+
             playerToolCooldown = GetToolCooldown(PlayerTools.ConstructionGun);
             constructionGunAnimation = -5;
 
@@ -536,7 +576,25 @@ namespace Infiniminer
             msgBuffer.Write(playerPosition);
             msgBuffer.Write(playerCamera.GetLookVector());
             msgBuffer.Write((byte)PlayerTools.ConstructionGun);
-            msgBuffer.Write((byte)blockType);
+            BlockType nb = blockType;
+            if (alternate)
+            {
+                switch (nb)
+                {
+                    // Code allows to use alternate colour of everything, but it's only enabled for translucents
+                    /*case BlockType.BankBlue: nb = BlockType.BankRed; break;
+                    case BlockType.BeaconBlue: nb = BlockType.BeaconRed; break;
+                    case BlockType.SolidBlue: nb = BlockType.SolidRed; break;*/
+                    case BlockType.TransBlue: nb = BlockType.TransRed; break;
+
+                    /*case BlockType.BankRed: nb = BlockType.BankBlue; break;
+                    case BlockType.BeaconRed: nb = BlockType.BeaconBlue; break;
+                    case BlockType.SolidRed: nb = BlockType.SolidBlue; break;*/
+                    case BlockType.TransRed: nb = BlockType.TransBlue; break;
+                    default: break;//Nothing
+                }
+            }
+            msgBuffer.Write((byte)nb);
             netClient.SendMessage(msgBuffer, NetChannel.ReliableUnordered);
         }
 
@@ -572,7 +630,7 @@ namespace Infiniminer
             msgBuffer.Write(playerCamera.GetLookVector());
             msgBuffer.Write((byte)PlayerTools.Detonator);
             msgBuffer.Write((byte)BlockType.None);
-            netClient.SendMessage(msgBuffer, NetChannel.ReliableUnordered); 
+            netClient.SendMessage(msgBuffer, NetChannel.ReliableUnordered);
         }
 
         public void ToggleRadar()
@@ -587,7 +645,7 @@ namespace Infiniminer
             distanceReading = 30;
 
             // Scan out along the camera axis for 30 meters.
-            for (int i=-3;i<=3; i++)
+            for (int i = -3; i <= 3; i++)
                 for (int j = -3; j <= 3; j++)
                 {
                     Matrix rotation = Matrix.CreateRotationX((float)(i * Math.PI / 128)) * Matrix.CreateRotationY((float)(j * Math.PI / 128));
