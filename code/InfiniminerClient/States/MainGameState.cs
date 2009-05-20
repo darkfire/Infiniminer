@@ -446,13 +446,13 @@ namespace Infiniminer.States
                 // Deposit and withdraw from a bank.
                 if (_P.AtBankTerminal())
                 {
-                    //Now plus and minus keys
-                    if (key == Keys.Add)
+                    //Now 8 and 9 keys
+                    if (key == Keys.D8)
                     {
                         _P.DepositOre();
                         _P.PlaySound(InfiniminerSound.ClickHigh);
                     }
-                    if (key == Keys.Subtract)
+                    if (key == Keys.D9)
                     {
                         _P.WithdrawOre();
                         _P.PlaySound(InfiniminerSound.ClickHigh);
