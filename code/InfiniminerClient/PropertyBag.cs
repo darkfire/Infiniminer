@@ -484,8 +484,9 @@ namespace Infiniminer
                         playerTools = new PlayerTools[3] {  PlayerTools.Pickaxe,
                                                         PlayerTools.ConstructionGun,     
                                                         PlayerTools.DeconstructionGun   };
-                        playerBlocks = new BlockType[8] {   playerTeam == PlayerTeam.Red ? BlockType.SolidRed : BlockType.SolidBlue,
-                                                        playerTeam == PlayerTeam.Red ? BlockType.TransRed : BlockType.TransBlue, //Only need one entry due to right-click
+                        playerBlocks = new BlockType[9] {   playerTeam == PlayerTeam.Red ? BlockType.SolidRed : BlockType.SolidBlue,
+                                                        BlockType.TransRed,
+                                                        BlockType.TransBlue, //playerTeam == PlayerTeam.Red ? BlockType.TransRed : BlockType.TransBlue, //Only need one entry due to right-click
                                                         BlockType.Road,
                                                         BlockType.Ladder,
                                                         BlockType.Jump,

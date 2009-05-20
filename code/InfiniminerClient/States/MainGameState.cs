@@ -236,8 +236,9 @@ namespace Infiniminer.States
                     moveVector += _P.playerCamera.GetRightVector();
                 if (keyState.IsKeyDown(Keys.A))
                     moveVector -= _P.playerCamera.GetRightVector();
+                /*//Sprinting
                 if (keyState.IsKeyDown(Keys.LeftShift) || keyState.IsKeyDown(Keys.RightShift))
-                    sprinting = true;
+                    sprinting = true;*/
             }
 
             if (moveVector.X != 0 || moveVector.Z != 0)
@@ -497,7 +498,7 @@ namespace Infiniminer.States
                     //    break;
 
                     case PlayerTools.ConstructionGun:
-                        _P.FireConstructionGun(_P.playerBlocks[_P.playerBlockSelected], !(button == MouseButton.LeftButton));//_P.FireConstructionGun(_P.playerBlocks[_P.playerBlockSelected]);
+                        _P.FireConstructionGun(_P.playerBlocks[_P.playerBlockSelected]);//, !(button == MouseButton.LeftButton));//_P.FireConstructionGun(_P.playerBlocks[_P.playerBlockSelected]);
                         break;
 
                     case PlayerTools.DeconstructionGun:
