@@ -88,7 +88,7 @@ namespace Infiniminer
                     p.SpriteModel.DrawText(_P.playerCamera.ViewMatrix,
                                            _P.playerCamera.ProjectionMatrix,
                                            p.Position - Vector3.UnitY * 1.5f,
-                                           playerText);
+                                           playerText, _P.playerTeam == PlayerTeam.Blue ? InfiniminerGame.IM_BLUE : InfiniminerGame.IM_RED);
                 }
             }
         }
