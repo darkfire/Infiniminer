@@ -372,6 +372,7 @@ namespace Infiniminer
                                         string chatString = msgBuffer.ReadString();
                                         ChatMessage chatMsg = new ChatMessage(chatString, chatType, 10);
                                         propertyBag.chatBuffer.Insert(0, chatMsg);
+                                        propertyBag.chatFullBuffer.Insert(0, chatMsg);
                                         propertyBag.PlaySound(InfiniminerSound.ClickLow);
                                     }
                                     break;
