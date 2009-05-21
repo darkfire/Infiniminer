@@ -135,6 +135,7 @@ namespace Infiniminer.States
                     }
                     if (connectIp != null)                   
                     {
+                        (_SM as InfiniminerGame).propertyBag.serverName = directConnectIP;
                         (_SM as InfiniminerGame).JoinGame(new IPEndPoint(connectIp, 5565));
                         nextState = "Infiniminer.States.LoadingState";
                     }
@@ -180,6 +181,7 @@ namespace Infiniminer.States
                     int distanceFromCenter = Math.Abs(_SM.GraphicsDevice.Viewport.Width / 2 - x);
                     if (distanceFromCenter < descWidths[serverIndex] / 2)
                     {
+                        (_SM as InfiniminerGame).propertyBag.serverName = serverList[serverIndex].serverName;
                         (_SM as InfiniminerGame).JoinGame(serverList[serverIndex].ipEndPoint);
                         nextState = "Infiniminer.States.LoadingState";
                         _P.PlaySound(InfiniminerSound.ClickHigh);

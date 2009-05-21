@@ -58,6 +58,11 @@ namespace Infiniminer
             return output;
         }
 
+        public void setServername(string newName)
+        {
+            propertyBag.serverName = newName;
+        }
+
         public void JoinGame(IPEndPoint serverEndPoint)
         {
             // Clear out the map load progress indicator.

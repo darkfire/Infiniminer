@@ -137,6 +137,7 @@ namespace Infiniminer
         public NetClient netClient = null;
         public Dictionary<uint, Player> playerList = new Dictionary<uint, Player>();
         public bool[,] mapLoadProgress = null;
+        public string serverName = "";
 
         // Player variables.
         public Camera playerCamera = null;

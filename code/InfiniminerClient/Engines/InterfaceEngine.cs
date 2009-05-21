@@ -262,7 +262,7 @@ namespace Infiniminer
                 //y -= 16 * i;
 
                 spriteBatch.DrawString(uiFont, messages[i].message, new Vector2(22, y), Color.Black);
-                spriteBatch.DrawString(uiFont, messages[i].message, new Vector2(20, y), chatColor);//graphicsDevice.Viewport.Height - 116 - 16 * i), chatColor);
+                spriteBatch.DrawString(uiFont, messages[i].message, new Vector2(20, y-2), chatColor);//graphicsDevice.Viewport.Height - 116 - 16 * i), chatColor);
             }
         }
 
@@ -344,6 +344,9 @@ namespace Infiniminer
             {
                 spriteBatch.Draw(texBlank, new Rectangle(0, 0, graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height), new Color(Color.Black, 0.7f));
 
+                //Server name
+                RenderMessageCenter(spriteBatch, _P.serverName, new Vector2(graphicsDevice.Viewport.Width / 2, 32), _P.playerTeam == PlayerTeam.Blue ? InfiniminerGame.IM_BLUE : InfiniminerGame.IM_RED, Color.Black);
+                
                 if (_P.teamWinners != PlayerTeam.None)
                 {
                     string teamName = _P.teamWinners == PlayerTeam.Red ? "RED" : "BLUE";
