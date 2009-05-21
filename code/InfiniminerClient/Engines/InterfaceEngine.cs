@@ -19,7 +19,7 @@ namespace Infiniminer
         InfiniminerGame gameInstance;
         PropertyBag _P;
         SpriteBatch spriteBatch;
-        SpriteFont uiFont, radarFont;
+        public SpriteFont uiFont, radarFont;
         Rectangle drawRect;
 
         Texture2D texCrosshairs, texBlank, texHelp;
@@ -245,6 +245,27 @@ namespace Infiniminer
             spriteBatch.Draw(blockIcons[blockType], new Rectangle(drawX + 37 * 3, drawY + 50 * 3, 117, 63), Color.White);
         }
 
+        public void drawChat(List<ChatMessage>messages, GraphicsDevice graphicsDevice)
+        {
+            int newlines = 0;
+            for (int i = 0; i < messages.Count; i++)
+            {
+                Color chatColor = Color.White;
+                if (messages[i].type == ChatMessageType.SayRedTeam)
+                    chatColor = InfiniminerGame.IM_RED;
+                if (messages[i].type == ChatMessageType.SayBlueTeam)
+                    chatColor = InfiniminerGame.IM_BLUE;
+
+                int y = graphicsDevice.Viewport.Height - 114;
+                newlines += messages[i].newlines;
+                y -= 16 * newlines;
+                //y -= 16 * i;
+
+                spriteBatch.DrawString(uiFont, messages[i].message, new Vector2(22, y), Color.Black);
+                spriteBatch.DrawString(uiFont, messages[i].message, new Vector2(20, y), chatColor);//graphicsDevice.Viewport.Height - 116 - 16 * i), chatColor);
+            }
+        }
+
         public void Render(GraphicsDevice graphicsDevice)
         {
             // If we don't have _P, grab it from the current gameInstance.
@@ -362,27 +383,19 @@ namespace Infiniminer
             }
             if (_P.chatMode != ChatMessageType.None)
             {
-                for (int i = 0; i < _P.chatFullBuffer.Count; i++)
+                drawChat(_P.chatFullBuffer,graphicsDevice);
+                /*for (int i = 0; i < _P.chatFullBuffer.Count; i++)
                 {
                     Color chatColor = Color.White;
                     chatColor = _P.chatFullBuffer[i].type == ChatMessageType.SayAll ? Color.White : _P.chatFullBuffer[i].type == ChatMessageType.SayRedTeam ? InfiniminerGame.IM_RED : InfiniminerGame.IM_BLUE;
                     
                     spriteBatch.DrawString(uiFont, _P.chatFullBuffer[i].message, new Vector2(22, graphicsDevice.Viewport.Height - 114 - 16 * i), Color.Black);
                     spriteBatch.DrawString(uiFont, _P.chatFullBuffer[i].message, new Vector2(20, graphicsDevice.Viewport.Height - 116 - 16 * i), chatColor);
-                }
+                }*/
             }
             else
             {
-                for (int i = 0; i < _P.chatBuffer.Count; i++)
-                {
-                    Color chatColor = Color.White;
-                    if (_P.chatBuffer[i].type == ChatMessageType.SayRedTeam)
-                        chatColor = InfiniminerGame.IM_RED;
-                    if (_P.chatBuffer[i].type == ChatMessageType.SayBlueTeam)
-                        chatColor = InfiniminerGame.IM_BLUE;
-                    spriteBatch.DrawString(uiFont, _P.chatBuffer[i].message, new Vector2(22, graphicsDevice.Viewport.Height - 114 - 16 * i), Color.Black);
-                    spriteBatch.DrawString(uiFont, _P.chatBuffer[i].message, new Vector2(20, graphicsDevice.Viewport.Height - 116 - 16 * i), chatColor);
-                }
+                drawChat(_P.chatBuffer,graphicsDevice);
             }
 
             // Draw the player radar.

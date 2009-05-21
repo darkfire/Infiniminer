@@ -61,12 +61,14 @@ namespace Infiniminer
         public string message;
         public ChatMessageType type;
         public float timestamp;
+        public int newlines;
 
-        public ChatMessage(string message, ChatMessageType type, float timestamp)
+        public ChatMessage(string message, ChatMessageType type, float timestamp, int newlines)
         {
             this.message = message;
             this.type = type;
             this.timestamp = timestamp;
+            this.newlines = newlines;
         }
     }
 
@@ -331,6 +333,56 @@ namespace Infiniminer
             msgBuffer.Write((byte)sound);
             msgBuffer.Write(position);
             netClient.SendMessage(msgBuffer, NetChannel.ReliableUnordered);
+        }
+
+        public void addChatMessage(string chatString, ChatMessageType chatType, float timestamp)
+        {
+            //Wordwrap handling
+            string[] text = chatString.Split(' ');
+            string textFull="";
+            string textLine="";
+            int newlines = 0;
+
+            float curWidth=0;
+            for(int i=0;i<text.Length;i++){//each(string part in text){
+                string part = text[i];
+                if (i!=text.Length-1)
+                    part+=' '; //Correct for lost spaces
+                float incr=interfaceEngine.uiFont.MeasureString(part).X;
+                curWidth+=incr;
+                if (curWidth>1024-64) //Assume default resolution, unfortunately
+                {
+                    if (textLine.IndexOf(' ')<0)
+                    {
+                        curWidth = 0;
+                        textFull = textFull + "\n" + textLine;
+                        textLine = "";
+                    }
+                    else
+                    {
+                        curWidth = incr;
+                        textFull = textFull + "\n" + textLine;
+                        textLine = part;
+                    }
+                    newlines++;
+                }else{
+                    textLine=textLine + part;
+                }
+            }
+            if (textLine != "")
+            {
+                textFull += "\n" + textLine;
+                newlines++;
+            }
+
+            if (textFull == "")
+                textFull = chatString;
+            
+            ChatMessage chatMsg = new ChatMessage(textFull, chatType, 10,newlines);
+            
+            chatBuffer.Insert(0, chatMsg);
+            chatFullBuffer.Insert(0, chatMsg);
+            PlaySound(InfiniminerSound.ClickLow);
         }
 
         //public void Teleport()

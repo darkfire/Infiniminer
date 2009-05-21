@@ -33,6 +33,12 @@ namespace Infiniminer
 
         public const string INFINIMINER_VERSION = "v1.5";
         public const int GROUND_LEVEL = 8;
+        public const string deathByLava = "HAD AN UNFORTUNATE SMELTING ACCIDENT!";
+        public const string deathByElec = "GOT TOO CLOSE TO THE POWER LINES!";
+        public const string deathByExpl = "WAS KILLED BY AN EXPLOSION!";//SAW A BRIGHT FLASH";
+        public const string deathByFall = "HAD A QUICK MEET WITH GRAVITY!";//SOLID GROUND!";
+        public const string deathByMiss = "WAS KILLED BY MISADVENTURE!";
+        public const string deathBySuic = "HAS COMMITED PIXELCIDE!";
         public static Color IM_BLUE = new Color(80, 150, 255);
         public static Color IM_RED = new Color(222, 24, 24);
 
@@ -271,7 +277,7 @@ namespace Infiniminer
                                         // Figure out what the effect is.
                                         float distFromExplosive = (blockPos + 0.5f * Vector3.One - propertyBag.playerPosition).Length();
                                         if (distFromExplosive < 3)
-                                            propertyBag.KillPlayer("WAS KILLED IN AN EXPLOSION!");
+                                            propertyBag.KillPlayer(deathByExpl);//"WAS KILLED IN AN EXPLOSION!");
                                         else if (distFromExplosive < 8)
                                         {
                                             // If we're not in explosion mode, turn it on with the minimum ammount of shakiness.
@@ -370,10 +376,8 @@ namespace Infiniminer
                                     {
                                         ChatMessageType chatType = (ChatMessageType)msgBuffer.ReadByte();
                                         string chatString = msgBuffer.ReadString();
-                                        ChatMessage chatMsg = new ChatMessage(chatString, chatType, 10);
-                                        propertyBag.chatBuffer.Insert(0, chatMsg);
-                                        propertyBag.chatFullBuffer.Insert(0, chatMsg);
-                                        propertyBag.PlaySound(InfiniminerSound.ClickLow);
+                                        //Time to break it up into multiple lines
+                                        propertyBag.addChatMessage(chatString,chatType,10);
                                     }
                                     break;
 
@@ -426,7 +430,7 @@ namespace Infiniminer
             BlockType upperBlock = propertyBag.blockEngine.BlockAtPoint(movePosition);
             if (upperBlock == BlockType.Lava || lowerBlock == BlockType.Lava || midBlock == BlockType.Lava)
             {
-                propertyBag.KillPlayer("WAS INCINERATED BY LAVA!");
+                propertyBag.KillPlayer(deathByLava);//"HAD AN UNFORTUNATE SMELTING ACCIDENT");////"WAS INCINERATED BY LAVA!");
             }
         }
 

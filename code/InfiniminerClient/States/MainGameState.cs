@@ -143,7 +143,7 @@ namespace Infiniminer.States
                     if (fallDamage >= 1)
                     {
                         _P.PlaySoundForEveryone(InfiniminerSound.GroundHit, _P.playerPosition);
-                        _P.KillPlayer("WAS KILLED BY GRAVITY!");
+                        _P.KillPlayer(InfiniminerGame.deathByFall);//"WAS KILLED BY GRAVITY!");
                         return;
                     }
                     else if (fallDamage > 0.5)
@@ -198,7 +198,7 @@ namespace Infiniminer.States
                     //    return;
 
                     case BlockType.Lava:
-                        _P.KillPlayer("WAS INCINERATED BY LAVA!");
+                        _P.KillPlayer(InfiniminerGame.deathByLava);//"WAS INCINERATED BY LAVA!");
                         return;
                 }
 
@@ -206,11 +206,11 @@ namespace Infiniminer.States
                 switch (hittingHeadOnBlock)
                 {
                     case BlockType.Shock:
-                        _P.KillPlayer("WAS ELECTROCUTED!");
+                        _P.KillPlayer(InfiniminerGame.deathByElec);//"WAS ELECTROCUTED!");
                         return;
 
                     case BlockType.Lava:
-                        _P.KillPlayer("WAS INCINERATED BY LAVA!");
+                        _P.KillPlayer(InfiniminerGame.deathByLava);//"WAS INCINERATED BY LAVA!");
                         return;
                 }
             }
@@ -219,7 +219,7 @@ namespace Infiniminer.States
             // Death by falling off the map.
             if (_P.playerPosition.Y < -30)
             {
-                _P.KillPlayer("WAS KILLED BY MISADVENTURE!");
+                _P.KillPlayer(InfiniminerGame.deathByMiss);//"WAS KILLED BY MISADVENTURE!");
                 return;
             }
 
@@ -294,7 +294,7 @@ namespace Infiniminer.States
             // It"s solid there, so see if it"s a lava block. If so, touching it will kill us!
             if (upperBlock == BlockType.Lava || lowerBlock == BlockType.Lava || midBlock == BlockType.Lava)
             {
-                _P.KillPlayer("WAS INCINERATED BY LAVA!");
+                _P.KillPlayer(InfiniminerGame.deathByLava);//"WAS INCINERATED BY LAVA!");
                 return true;
             }
 
@@ -346,7 +346,7 @@ namespace Infiniminer.States
             // Pixelcide!
             if (key == Keys.K && Keyboard.GetState().IsKeyDown(Keys.Escape) && !_P.playerDead)
             {
-                _P.KillPlayer("HAS COMMMITTED PIXELCIDE!");
+                _P.KillPlayer(InfiniminerGame.deathBySuic);//"HAS COMMMITTED PIXELCIDE!");
             }
 
             if (_P.chatMode != ChatMessageType.None)
