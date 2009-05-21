@@ -75,8 +75,8 @@ namespace Infiniminer.States
                     if ((_SM as InfiniminerGame).InvertMouseYAxis)
                         dy = -dy;
 
-                    _P.playerCamera.Yaw -= dx * 0.005f;
-                    _P.playerCamera.Pitch = (float)Math.Min(Math.PI * 0.49, Math.Max(-Math.PI * 0.49, _P.playerCamera.Pitch - dy * 0.005f));
+                    _P.playerCamera.Yaw -= dx * _P.mouseSensitivity;//0.005f;
+                    _P.playerCamera.Pitch = (float)Math.Min(Math.PI * 0.49, Math.Max(-Math.PI * 0.49, _P.playerCamera.Pitch - dy * _P.mouseSensitivity));//0.005f));
                 }
                 else
                 {

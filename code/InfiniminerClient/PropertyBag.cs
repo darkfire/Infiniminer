@@ -165,6 +165,8 @@ namespace Infiniminer
         public float radarValue = 0;
         public float constructionGunAnimation = 0;
 
+        public float mouseSensitivity = 0.005f;
+
         // Team variables.
         public uint teamOre = 0;
         public uint teamRedCash = 0;

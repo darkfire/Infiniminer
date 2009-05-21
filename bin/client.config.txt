@@ -15,5 +15,8 @@ yinvert = false
 # This value specifies the override volume multiplier, for people who find the sounds too loud.
 volume = 1.0
 
+#This value specifies the mouse sensitivity, from 1-50 default 5
+sensitivity = 5
+
 # If this flag is true, all sound for the game will be disabled. This should fix all AllocateFormatAndData crashes.
 nosound = false

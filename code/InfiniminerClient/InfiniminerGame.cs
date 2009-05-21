@@ -30,6 +30,7 @@ namespace Infiniminer
         public bool DrawFrameRate = false;
         public bool InvertMouseYAxis = false;
         public bool NoSound = false;
+        public float mouseSensitivity = 0.005f;
 
         public const string INFINIMINER_VERSION = "v1.5";
         public const int GROUND_LEVEL = 8;
@@ -465,7 +466,9 @@ namespace Infiniminer
                 RenderPretty = bool.Parse(dataFile.Data["pretty"]);
             if (dataFile.Data.ContainsKey("volume"))
                 volumeLevel = Math.Max(0,Math.Min(1,float.Parse(dataFile.Data["volume"], System.Globalization.CultureInfo.InvariantCulture)));
-
+            if (dataFile.Data.ContainsKey("sensitivity"))
+                mouseSensitivity=Math.Max(0.001f,Math.Min(0.05f,float.Parse(dataFile.Data["sensitivity"], System.Globalization.CultureInfo.InvariantCulture)/1000f));
+            //propertyBag.mouseSensitivity = mouseSensitivity;
             graphicsDeviceManager.ApplyChanges();
             base.Initialize();
         }
@@ -490,6 +493,7 @@ namespace Infiniminer
             propertyBag = new Infiniminer.PropertyBag(this);
             propertyBag.playerHandle = playerHandle;
             propertyBag.volumeLevel = volumeLevel;
+            propertyBag.mouseSensitivity = mouseSensitivity;
             msgBuffer = propertyBag.netClient.CreateBuffer();
         }
 
