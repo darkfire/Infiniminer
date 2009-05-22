@@ -376,11 +376,18 @@ namespace Infiniminer.States
                     // If we have an actual message to send, fire it off at the server.
                     if (_P.chatEntryBuffer.Length > 0)
                     {
-                        NetBuffer msgBuffer = _P.netClient.CreateBuffer();
-                        msgBuffer.Write((byte)InfiniminerMessage.ChatMessage);
-                        msgBuffer.Write((byte)_P.chatMode);
-                        msgBuffer.Write(_P.chatEntryBuffer);
-                        _P.netClient.SendMessage(msgBuffer, NetChannel.ReliableInOrder3);
+                        if (_P.netClient.Status == NetConnectionStatus.Connected)
+                        {
+                            NetBuffer msgBuffer = _P.netClient.CreateBuffer();
+                            msgBuffer.Write((byte)InfiniminerMessage.ChatMessage);
+                            msgBuffer.Write((byte)_P.chatMode);
+                            msgBuffer.Write(_P.chatEntryBuffer);
+                            _P.netClient.SendMessage(msgBuffer, NetChannel.ReliableInOrder3);
+                        }
+                        else
+                        {
+                            _P.addChatMessage("Not connected to server.", ChatMessageType.SayAll, 10);
+                        }
                     }
 
                     _P.chatEntryBuffer = "";

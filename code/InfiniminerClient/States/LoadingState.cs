@@ -22,7 +22,7 @@ namespace Infiniminer.States
         string nextState = null;
         SpriteFont uiFont;
         string[] currentHint;
-
+        
         static string[] HINTS = new string[18]
         {
             "Engineers can build bank blocks near ore veins for\nMiners to quickly fill the team's supplies.",
@@ -88,7 +88,9 @@ namespace Infiniminer.States
                 for (int y = 0; y < 64; y+=16)
                     if (_P.mapLoadProgress[x, y])
                         dataPacketsRecieved += 1;
-            string progressText = String.Format("{0:00}% LOADED", dataPacketsRecieved / 256.0f * 100);
+            string progressText = "Connecting...";
+            if ((_SM as InfiniminerGame).anyPacketsReceived)
+                progressText = String.Format("{0:00}% LOADED", dataPacketsRecieved / 256.0f * 100);
 
             SpriteBatch spriteBatch = new SpriteBatch(graphicsDevice);
             spriteBatch.Begin(SpriteBlendMode.AlphaBlend, SpriteSortMode.Deferred, SaveStateMode.SaveState);

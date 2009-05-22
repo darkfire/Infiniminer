@@ -180,6 +180,7 @@ namespace Infiniminer
 
                 case "players":
                     {
+                        ConsoleWrite("( " + playerList.Count + " / " + maxPlayers + " )");
                         foreach (Player p in playerList.Values)
                         {
                             string teamIdent = "";

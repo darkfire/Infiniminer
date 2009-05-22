@@ -43,6 +43,8 @@ namespace Infiniminer
         public static Color IM_BLUE = new Color(80, 150, 255);
         public static Color IM_RED = new Color(222, 24, 24);
 
+        public bool anyPacketsReceived = false;
+
         public InfiniminerGame(string[] args)
         {
         }
@@ -66,6 +68,7 @@ namespace Infiniminer
 
         public void JoinGame(IPEndPoint serverEndPoint)
         {
+            anyPacketsReceived = false;
             // Clear out the map load progress indicator.
             propertyBag.mapLoadProgress = new bool[64,64];
             for (int i = 0; i < 64; i++)
@@ -158,9 +161,12 @@ namespace Infiniminer
                                 ChangeState("Infiniminer.States.ServerBrowserState");
                         }
                         break;
-
+                    case NetMessageType.ConnectionApproval:
+                        anyPacketsReceived = true;
+                        break;
                     case NetMessageType.ConnectionRejected:
                         {
+                            anyPacketsReceived = false;
                             string[] reason = msgBuffer.ReadString().Split(";".ToCharArray());
                             if (reason.Length < 2 || reason[0] == "VER")
                                 MessageBox.Show("Error: client/server version incompability!\r\nServer: " + msgBuffer.ReadString() + "\r\nClient: " + INFINIMINER_VERSION);
@@ -177,6 +183,7 @@ namespace Infiniminer
                             {
                                 case InfiniminerMessage.BlockBulkTransfer:
                                     {
+                                        anyPacketsReceived = true;
                                         byte x = msgBuffer.ReadByte();
                                         byte y = msgBuffer.ReadByte();
                                         propertyBag.mapLoadProgress[x,y] = true;
