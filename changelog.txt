@@ -1,0 +1,27 @@
+Changelog from V1.5
+
+Featuers:
+	-General
+		-Tool hotkeys - numbers 1 through 5 switch directly to the correct tool (eg. 1 is pickaxe)
+		-New death messages, stored in easy-to-modify variables
+		-Server name is displayed at the top of the scoreboard
+	-Nametags
+		-Now coloured the team's colour instead of white
+		-The other team's players get nametags too, which will appear when you're close and can see them
+	-Chat
+		-Chat history - when you press y or u to start typing the last 10 chat messages will reappear
+		-Wordwrap, making long messages still be fully readable
+		-Copy, paste, and cut are now supported in chat
+	-Settings
+		-Fully functional settings menu! Provides an easy-to-use interface to edit all the settings available in client.config.txt
+		-New mouse sensitivity option
+	-Other
+		-Made server command "players" output how many people are playing and the player capacity
+		-Help menu updated to reflect new key layout
+		-Server browser dims servers that are full
+		-Joining games now displays "Connecting..." while waiting for the server response
+Bugfixes:
+	-Rare crash when 3D sound is played with invalid volume
+	-Spaces are now supported in names
+	-Fixed all of the warnings in source aside from "comparison to integral constant"
+	-Crash when sending a chat message at the end of a game
