@@ -20,6 +20,7 @@ namespace Infiniminer
 
         public DatafileWriter(string filename)
         {
+            Data = new Dictionary<string, string>();
             try
             {
                 FileStream file = new FileStream(filename, FileMode.Open, FileAccess.Read);

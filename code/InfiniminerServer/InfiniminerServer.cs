@@ -113,9 +113,7 @@ namespace Infiniminer
                 sr.Close();
                 file.Close();
             }
-            catch (Exception e)
-            {
-            }
+            catch { }
 
             return retList;
         }
@@ -131,9 +129,7 @@ namespace Infiniminer
                 sw.Close();
                 file.Close();
             }
-            catch (Exception e)
-            {
-            }
+            catch { }
         }
 
         public void KickPlayer(string ip)
@@ -269,8 +265,7 @@ namespace Infiniminer
                                 sr.Close();
                                 fs.Close();
                             }
-                            catch (FileNotFoundException e)
-                            {
+                            catch {
                                 ConsoleWrite("ERROR: File not found!");
                             }
                         }
@@ -380,7 +375,7 @@ namespace Infiniminer
         public bool Start()
         {
             // Read in from the config file.
-            DatafileLoader dataFile = new DatafileLoader("server.config.txt");
+            DatafileWriter dataFile = new DatafileWriter("server.config.txt");
             if (dataFile.Data.ContainsKey("winningcash"))
                 winningCashAmount = uint.Parse(dataFile.Data["winningcash"], System.Globalization.CultureInfo.InvariantCulture);
             if (dataFile.Data.ContainsKey("includelava"))
@@ -466,7 +461,11 @@ namespace Infiniminer
                                 else if (banList.Contains(newPlayer.IP))
                                 {
                                     msgSender.Disapprove("BAN;");
-                                }
+                                }/*
+                                else if (playerList.Count == maxPlayers)
+                                {
+                                    msgSender.Disapprove("FULL;");
+                                }*/
                                 else
                                 {
                                     playerList[msgSender] = newPlayer;

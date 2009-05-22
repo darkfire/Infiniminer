@@ -82,7 +82,7 @@ namespace Infiniminer.States
                 {
                     int textWidth = (int)(uiFont.MeasureString(server.GetServerDesc()).X);
                     descWidths.Add(textWidth+30);
-                    spriteBatch.DrawString(uiFont, server.GetServerDesc(), new Vector2(_SM.GraphicsDevice.Viewport.Width / 2 - textWidth / 2, drawRect.Y + drawY), Color.White);
+                    spriteBatch.DrawString(uiFont, server.GetServerDesc(), new Vector2(_SM.GraphicsDevice.Viewport.Width / 2 - textWidth / 2, drawRect.Y + drawY), !server.lanServer && server.numPlayers == server.maxPlayers ? new Color(0.7f, 0.7f, 0.7f) : Color.White);
                     drawY += 25;
                 }
             }
@@ -149,9 +149,7 @@ namespace Infiniminer.States
                     {
                         directConnectIP += System.Windows.Forms.Clipboard.GetText();
                     }
-                    catch (Exception e)
-                    {
-                    }
+                    catch { }
                 }
                 else if (keyMap.IsKeyMapped(key))
                 {

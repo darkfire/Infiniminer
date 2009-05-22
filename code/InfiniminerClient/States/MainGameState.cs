@@ -351,6 +351,25 @@ namespace Infiniminer.States
 
             if (_P.chatMode != ChatMessageType.None)
             {
+                if (Keyboard.GetState().IsKeyDown(Keys.LeftControl) || Keyboard.GetState().IsKeyDown(Keys.RightControl))
+                {
+                    if (key == Keys.V)
+                    {
+                        _P.chatEntryBuffer += System.Windows.Forms.Clipboard.GetText();
+                        return;
+                    }
+                    else if (key == Keys.C)
+                    {
+                        System.Windows.Forms.Clipboard.SetText(_P.chatEntryBuffer);
+                        return;
+                    }
+                    else if (key == Keys.X)
+                    {
+                        System.Windows.Forms.Clipboard.SetText(_P.chatEntryBuffer);
+                        _P.chatEntryBuffer = "";
+                        return;
+                    }
+                }
                 // Put the characters in the chat buffer.
                 if (key == Keys.Enter)
                 {

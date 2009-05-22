@@ -447,7 +447,8 @@ namespace Infiniminer
             graphicsDeviceManager.PreferredBackBufferHeight = 768;
             graphicsDeviceManager.PreferredDepthStencilFormat = DepthFormat.Depth24Stencil8;
 
-            DatafileLoader dataFile = new DatafileLoader("client.config.txt");
+            //Now moving to DatafileWriter only since it can read and write
+            DatafileWriter dataFile = new DatafileWriter("client.config.txt");
             if (dataFile.Data.ContainsKey("width"))
                 graphicsDeviceManager.PreferredBackBufferWidth = int.Parse(dataFile.Data["width"], System.Globalization.CultureInfo.InvariantCulture);
             if (dataFile.Data.ContainsKey("height"))

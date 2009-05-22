@@ -155,26 +155,26 @@ namespace Infiniminer.States
             addSpace(16);
 
             addLabelAutomatic("Screen Settings");
-            addTextInputAutomatic("Scrn  Width", dw.Data.ContainsKey("width") ? dw.Data["width"] : "1024");
-            addTextInputAutomatic("Scrn Height", dw.Data.ContainsKey("height") ? dw.Data["height"] : "780");
-            addButtonAutomatic("Screen Mode", "Fullscreen", "Windowed", dw.Data.ContainsKey("fullscreen") ? bool.Parse(dw.Data["fullscreen"]) : false);
+                addTextInputAutomatic("Scrn  Width", dw.Data.ContainsKey("width") ? dw.Data["width"] : "1024");
+                addTextInputAutomatic("Scrn Height", dw.Data.ContainsKey("height") ? dw.Data["height"] : "780");
+                addButtonAutomatic("Screen Mode", "Fullscreen", "Windowed", dw.Data.ContainsKey("fullscreen") ? bool.Parse(dw.Data["fullscreen"]) : false);
             addSpace(16);
 
             addLabelAutomatic("Sound Settings");
-            addSliderAutomatic("Volume", 1f, 100f, dw.Data.ContainsKey("volume") ? float.Parse(dw.Data["volume"])*100 : 100f, true);
-            addButtonAutomatic("Enable Sound", "On", "NoSound", dw.Data.ContainsKey("nosound") ? !bool.Parse(dw.Data["nosound"]) : true);
+                addSliderAutomatic("Volume", 1f, 100f, dw.Data.ContainsKey("volume") ? float.Parse(dw.Data["volume"])*100 : 100f, true);
+                addButtonAutomatic("Enable Sound", "On", "NoSound", dw.Data.ContainsKey("nosound") ? !bool.Parse(dw.Data["nosound"]) : true);
             addSpace(16);
 
             shiftColumn();
 
             addLabelAutomatic("Mouse Settings");
-            addButtonAutomatic("Invert Mouse", "Yes", "No", dw.Data.ContainsKey("yinvert") ? bool.Parse(dw.Data["yinvert"]) : false);
-            addSliderAutomatic("Mouse Sensitivity", 1f, 10f, dw.Data.ContainsKey("sensitivity") ? float.Parse(dw.Data["sensitivity"]) : 5f, true);
+                addButtonAutomatic("Invert Mouse", "Yes", "No", dw.Data.ContainsKey("yinvert") ? bool.Parse(dw.Data["yinvert"]) : false);
+                addSliderAutomatic("Mouse Sensitivity", 1f, 10f, dw.Data.ContainsKey("sensitivity") ? float.Parse(dw.Data["sensitivity"]) : 5f, true);
             addSpace(16);
 
             addLabelAutomatic("Misc Settings");
-            addButtonAutomatic("Bloom", "Pretty", "Boring", dw.Data.ContainsKey("pretty") ? bool.Parse(dw.Data["pretty"]) : true);
-            addButtonAutomatic("Show FPS", "Yes", "No", dw.Data.ContainsKey("showfps") ? bool.Parse(dw.Data["showfps"]) : true);
+                addButtonAutomatic("Bloom", "Pretty", "Boring", dw.Data.ContainsKey("pretty") ? bool.Parse(dw.Data["pretty"]) : true);
+                addButtonAutomatic("Show FPS", "Yes", "No", dw.Data.ContainsKey("showfps") ? bool.Parse(dw.Data["showfps"]) : true);
             addSpace(16);
 
             

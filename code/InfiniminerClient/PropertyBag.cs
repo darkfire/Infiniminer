@@ -322,6 +322,7 @@ namespace Infiniminer
 
             float distance = (position - playerPosition).Length();
             float volume = Math.Max(0, 10 - distance) / 10.0f * volumeLevel;
+            volume = volume > 1.0f ? 1.0f : volume < 0.0f ? 0.0f : volume;
             soundList[sound].Play(volume);
         }
 
