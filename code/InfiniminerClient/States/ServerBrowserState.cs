@@ -28,9 +28,10 @@ namespace Infiniminer.States
         string directConnectIP = "";
         KeyMap keyMap;
 
-        ClickRegion[] clkMenuServer = new ClickRegion[2] {
-	        new ClickRegion(new Rectangle(763,713,243,42), "refresh"),
-            new ClickRegion(new Rectangle(0,713,425,42), "direct")
+        ClickRegion[] clkMenuServer = new ClickRegion[3] {
+            new ClickRegion(new Rectangle(0,713,425,42), "direct"),
+            new ClickRegion(new Rectangle(456,713,262,42),"settings"),
+	        new ClickRegion(new Rectangle(763,713,243,42), "refresh")
         };
 
         public override void OnEnter(string oldState)
@@ -199,6 +200,10 @@ namespace Infiniminer.States
 
                     case "direct":
                         directConnectIPEnter = true;
+                        _P.PlaySound(InfiniminerSound.ClickHigh);
+                        break;
+                    case "settings":
+                        nextState = "Infiniminer.States.SettingsState";
                         _P.PlaySound(InfiniminerSound.ClickHigh);
                         break;
                 }

@@ -88,6 +88,7 @@
   <ItemGroup>
     <Compile Include="BloomEffect\BloomComponent.cs" />
     <Compile Include="BloomEffect\BloomSettings.cs" />
+    <Compile Include="DataFileWriter.cs" />
     <Compile Include="Engines\BlockEngine.cs" />
     <Compile Include="BlockInformation.cs" />
     <Compile Include="Camera.cs" />
@@ -97,6 +98,11 @@
     <Compile Include="HTTPRequest.cs" />
     <Compile Include="InfiniminerGame.cs" />
     <Compile Include="Engines\InterfaceEngine.cs" />
+    <Compile Include="InterfaceItems\InterfaceButtonToggle.cs" />
+    <Compile Include="InterfaceItems\InterfaceElement.cs" />
+    <Compile Include="InterfaceItems\InterfaceLabel.cs" />
+    <Compile Include="InterfaceItems\InterfaceSlider.cs" />
+    <Compile Include="InterfaceItems\InterfaceTextInput.cs" />
     <Compile Include="KeyMap.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="Engines\PlayerEngine.cs" />
@@ -112,6 +118,7 @@
     <Compile Include="States\LoadingState.cs" />
     <Compile Include="States\MainGameState.cs" />
     <Compile Include="States\ServerBrowserState.cs" />
+    <Compile Include="States\SettingsState.cs" />
     <Compile Include="States\TeamSelectionState.cs" />
     <Compile Include="States\TitleState.cs" />
     <Compile Include="TestGeometryRenderer.cs" />
