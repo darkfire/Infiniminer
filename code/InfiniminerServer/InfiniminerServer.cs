@@ -23,7 +23,9 @@ namespace Infiniminer
         string serverName = "Unnamed Server";
         bool sandboxMode = false;
         bool includeLava = true;
+        bool noTnt = false;
         DateTime lastServerListUpdate = DateTime.Now;
+        DateTime lastMapBackup = DateTime.Now;
         List<string> banList = null;
 
         const int CONSOLE_SIZE = 30;
@@ -60,10 +62,17 @@ namespace Infiniminer
                 extraInfo += string.Format("{0:#.##k}", winningCashAmount / 1000);
             if (!includeLava)
                 extraInfo += ", !lava";
+            if (noTnt)
+                extraInfo += ", !tnt";
             return extraInfo;
         }
 
         public void PublicServerListUpdate()
+        {
+            PublicServerListUpdate(false);
+        }
+
+        public void PublicServerListUpdate(bool doIt)
         {
             if (!publicServer)
                 return;
@@ -75,17 +84,27 @@ namespace Infiniminer
             postDict["player_capacity"] = "" + maxPlayers;
             postDict["extra"] = GetExtraInfo();
 
-            try
-            {
-                HttpRequest.Post("http://apps.keithholman.net/post", postDict);
-                ConsoleWrite("PUBLICLIST: UPDATING SERVER LISTING");
-            }
-            catch (Exception)
-            {
-                ConsoleWrite("PUBLICLIST: ERROR CONTACTING SERVER");
-            }
 
-            lastServerListUpdate = DateTime.Now;
+            // Time to send a new server update?
+            TimeSpan updateTimeSpan = DateTime.Now - lastServerListUpdate;
+            if (updateTimeSpan.TotalMinutes > 2||doIt)
+            {
+                try
+                {
+                    HttpRequest.Post("http://apps.keithholman.net/post", postDict);
+                    ConsoleWrite("PUBLICLIST: UPDATING SERVER LISTING");
+                }
+                catch (Exception)
+                {
+                    ConsoleWrite("PUBLICLIST: ERROR CONTACTING SERVER");
+                }
+                lastServerListUpdate = DateTime.Now;
+            }
+            else
+            {
+                //Enforce a server update sooner
+                //lastServerListUpdate.AddMinutes(1);
+            }
         }
 
         public void ConsoleWrite(string text)
@@ -134,10 +153,15 @@ namespace Infiniminer
 
         public void KickPlayer(string ip)
         {
+            KickPlayer(ip, false);
+        }
+
+        public void KickPlayer(string ip, bool name)
+        {
             List<Player> playersToKick = new List<Player>();
             foreach (Player p in playerList.Values)
             {
-                if (p.IP == ip)
+                if ((p.IP == ip&&!name)||(p.Handle == ip&&name))
                     playersToKick.Add(p);
             }
             foreach (Player p in playersToKick)
@@ -149,6 +173,23 @@ namespace Infiniminer
 
         public void BanPlayer(string ip)
         {
+            BanPlayer(ip, false);
+        }
+
+        public void BanPlayer(string ip, bool name)
+        {
+            string realIp = ip;
+            if (name)
+            {
+                foreach (Player p in playerList.Values)
+                {
+                    if (p.Handle == ip)
+                    {
+                        realIp = p.IP;
+                        break;
+                    }
+                }
+            }
             if (!banList.Contains(ip))
             {
                 banList.Add(ip);
@@ -169,11 +210,15 @@ namespace Infiniminer
                         ConsoleWrite("SERVER CONSOLE COMMANDS:");
                         ConsoleWrite(" players");
                         ConsoleWrite(" kick <ip>");
+                        ConsoleWrite(" kickn <name>");
                         ConsoleWrite(" ban <ip>");
+                        ConsoleWrite(" bann <name>");
                         ConsoleWrite(" say <message>");
                         ConsoleWrite(" save <mapfile>");
                         ConsoleWrite(" load <mapfile>");
+                        ConsoleWrite(" toggle [tnt]");
                         ConsoleWrite(" restart");
+                        ConsoleWrite(" reload");
                         ConsoleWrite(" quit");
                     }
                     break;
@@ -201,6 +246,14 @@ namespace Infiniminer
                         }
                     }
                     break;
+                case "kickn":
+                    {
+                        if (args.Length == 2)
+                        {
+                            KickPlayer(args[1], true);
+                        }
+                    }
+                    break;
 
                 case "ban":
                     {
@@ -212,6 +265,27 @@ namespace Infiniminer
                     }
                     break;
 
+                case "bann":
+                    {
+                        if (args.Length == 2)
+                        {
+                            KickPlayer(args[1],true);
+                            BanPlayer(args[1],true);
+                        }
+                    }
+                    break;
+
+                case "toggle":
+                    if (args.Length == 2)
+                    {
+                        switch (args[1])
+                        {
+                            case "tnt":
+                                noTnt = !noTnt;
+                                break;
+                        }
+                    }
+                    break;
                 case "quit":
                     {
                         keepRunning = false;
@@ -247,30 +321,17 @@ namespace Infiniminer
                     {
                         if (args.Length >= 2)
                         {
-                            try
-                            {
-                                FileStream fs = new FileStream(args[1], FileMode.Open);
-                                StreamReader sr = new StreamReader(fs);
-                                for (int x = 0; x < 64; x++)
-                                    for (int y = 0; y < 64; y++)
-                                        for (int z = 0; z < 64; z++)
-                                        {
-                                            string line = sr.ReadLine();
-                                            string[] fileArgs = line.Split(",".ToCharArray());
-                                            if (fileArgs.Length == 2)
-                                            {
-                                                blockList[x, y, z] = (BlockType)int.Parse(fileArgs[0], System.Globalization.CultureInfo.InvariantCulture);
-                                                blockCreatorTeam[x, y, z] = (PlayerTeam)int.Parse(fileArgs[1], System.Globalization.CultureInfo.InvariantCulture);
-                                            }
-                                        }
-                                sr.Close();
-                                fs.Close();
-                            }
-                            catch {
-                                ConsoleWrite("ERROR: File not found!");
-                            }
+                            if (LoadLevel(args[1]))
+                                Console.WriteLine("Loaded level " + args[1]);
+                            else
+                                Console.WriteLine("Level file not found!");
                         }
                     }
+                    break;
+                case "reload":
+                    disconnectAll();
+                    ConsoleWrite("CALCULATING INITIAL LAVA FLOWS");
+                    ConsoleWrite("TOTAL LAVA BLOCKS = " + newMap());
                     break;
             }
 
@@ -288,6 +349,47 @@ namespace Infiniminer
                         sw.WriteLine((byte)blockList[x, y, z] + "," + (byte)blockCreatorTeam[x, y, z]);
             sw.Close();
             fs.Close();
+        }
+
+        public bool LoadLevel(string filename)
+        {
+            disconnectAll();
+            try
+            {
+                FileStream fs = new FileStream(filename, FileMode.Open);
+                StreamReader sr = new StreamReader(fs);
+                for (int x = 0; x < 64; x++)
+                    for (int y = 0; y < 64; y++)
+                        for (int z = 0; z < 64; z++)
+                        {
+                            string line = sr.ReadLine();
+                            string[] fileArgs = line.Split(",".ToCharArray());
+                            if (fileArgs.Length == 2)
+                            {
+                                blockList[x, y, z] = (BlockType)int.Parse(fileArgs[0], System.Globalization.CultureInfo.InvariantCulture);
+                                blockCreatorTeam[x, y, z] = (PlayerTeam)int.Parse(fileArgs[1], System.Globalization.CultureInfo.InvariantCulture);
+                            }
+                        }
+                sr.Close();
+                fs.Close();
+                return true;
+            }
+            catch { }
+            return false;
+        }
+
+        public void ResetLevel()
+        {
+            disconnectAll();
+            newMap();
+        }
+
+        public void disconnectAll()
+        {
+            foreach (Player p in playerList.Values)
+            {
+                p.NetConn.Disconnect("",0);
+            }
         }
 
         public void ConsoleRedraw()
@@ -373,6 +475,24 @@ namespace Infiniminer
             //ConsoleWrite("BLOCKSET: " + x + " " + y + " " + z + " " + blockType.ToString());
         }
 
+        public int newMap()
+        {
+            // Create our block world, translating the coordinates out of the cave generator (where Z points down)
+            BlockType[, ,] worldData = CaveGenerator.GenerateCaveSystem(MAPSIZE, includeLava, oreFactor);
+            blockList = new BlockType[MAPSIZE, MAPSIZE, MAPSIZE];
+            blockCreatorTeam = new PlayerTeam[MAPSIZE, MAPSIZE, MAPSIZE];
+            for (ushort i = 0; i < MAPSIZE; i++)
+                for (ushort j = 0; j < MAPSIZE; j++)
+                    for (ushort k = 0; k < MAPSIZE; k++)
+                    {
+                        blockList[i, (ushort)(MAPSIZE - 1 - k), j] = worldData[i, j, k];
+                        blockCreatorTeam[i, j, k] = PlayerTeam.None;
+                    }
+            for (int i = 0; i < MAPSIZE * 2; i++)
+                DoLavaStuff();
+            return lavaBlockCount;
+        }
+
         public bool Start()
         {
             // Read in from the config file.
@@ -391,21 +511,13 @@ namespace Infiniminer
                 serverName = dataFile.Data["servername"];
             if (dataFile.Data.ContainsKey("sandbox"))
                 sandboxMode = bool.Parse(dataFile.Data["sandbox"]);
+            if (dataFile.Data.ContainsKey("notnt"))
+                noTnt = bool.Parse(dataFile.Data["notnt"]);
 
             // Load the ban-list.
             banList = LoadBanList();
 
-            // Create our block world, translating the coordinates out of the cave generator (where Z points down)
-            BlockType[, ,] worldData = CaveGenerator.GenerateCaveSystem(MAPSIZE, includeLava, oreFactor);
-            blockList = new BlockType[MAPSIZE, MAPSIZE, MAPSIZE];
-            blockCreatorTeam = new PlayerTeam[MAPSIZE, MAPSIZE, MAPSIZE];
-            for (ushort i = 0; i < MAPSIZE; i++)
-                for (ushort j = 0; j < MAPSIZE; j++)
-                    for (ushort k = 0; k < MAPSIZE; k++)
-                    {
-                        blockList[i, (ushort)(MAPSIZE - 1 - k), j] = worldData[i, j, k];
-                        blockCreatorTeam[i, j, k] = PlayerTeam.None;
-                    }
+            //newMap();
 
             // Initialize the server.
             NetConfiguration netConfig = new NetConfiguration("InfiniminerPlus");
@@ -429,12 +541,14 @@ namespace Infiniminer
 
             // Calculate initial lava flows.
             ConsoleWrite("CALCULATING INITIAL LAVA FLOWS");
-            for (int i=0; i<MAPSIZE*2; i++)
-                DoLavaStuff();
-            ConsoleWrite("TOTAL LAVA BLOCKS = " + lavaBlockCount);
+            /*for (int i=0; i<MAPSIZE*2; i++)
+                DoLavaStuff();*/
+            ConsoleWrite("TOTAL LAVA BLOCKS = " + newMap());//lavaBlockCount);
 
             // Send the initial server list update.
-            PublicServerListUpdate();
+            PublicServerListUpdate(true);
+
+            lastMapBackup = DateTime.Now;
 
             // Main server loop!
             ConsoleWrite("SERVER READY");
@@ -487,7 +601,7 @@ namespace Infiniminer
 
                                 if (msgSender.Status == NetConnectionStatus.Connected)
                                 {
-                                    ConsoleWrite("CONNECT: " + playerList[msgSender].Handle);
+                                    ConsoleWrite("CONNECT: " + playerList[msgSender].Handle + " ( " + playerList[msgSender].IP + " )");
                                     SendCurrentMap(msgSender);
                                     SendPlayerJoined(player);
                                     PublicServerListUpdate();
@@ -689,6 +803,13 @@ namespace Infiniminer
                             }
                             break;
                     }
+                }
+
+                //Time to backup map?
+                TimeSpan mapUpdateTimeSpan = DateTime.Now - lastMapBackup;
+                if (mapUpdateTimeSpan.TotalMinutes > 5)
+                {
+                    SaveLevel("autoBK.lvl");
                 }
 
                 // Time to send a new server update?
@@ -1085,6 +1206,18 @@ namespace Infiniminer
             }
         }
 
+        public void ExplosionEffectAtPoint(int x, int y, int z)
+        {
+            // Send off the explosion to clients.
+            NetBuffer msgBuffer = netServer.CreateBuffer();
+            msgBuffer.Write((byte)InfiniminerMessage.TriggerExplosion);
+            msgBuffer.Write(new Vector3(x, y, z));
+            foreach (NetConnection netConn in playerList.Keys)
+                if (netConn.Status == NetConnectionStatus.Connected)
+                    netServer.SendMessage(msgBuffer, netConn, NetChannel.ReliableUnordered);
+            //Or not, there's no dedicated function for this effect >:(
+        }
+
         public void DetonateAtPoint(int x, int y, int z)
         {
             // Remove the block that is detonating.
@@ -1132,13 +1265,7 @@ namespace Infiniminer
                             SetBlock((ushort)(x + dx), (ushort)(y + dy), (ushort)(z + dz), BlockType.None, PlayerTeam.None);
                     }
 
-            // Send off the explosion to clients.
-            NetBuffer msgBuffer = netServer.CreateBuffer();
-            msgBuffer.Write((byte)InfiniminerMessage.TriggerExplosion);
-            msgBuffer.Write(new Vector3(x,y,z));
-            foreach (NetConnection netConn in playerList.Keys)
-                if (netConn.Status == NetConnectionStatus.Connected)
-                    netServer.SendMessage(msgBuffer, netConn, NetChannel.ReliableUnordered);
+            ExplosionEffectAtPoint(x, y, z);
         }
 
         public void UseDetonator(Player player)
@@ -1152,6 +1279,13 @@ namespace Infiniminer
 
                 if (blockList[x, y, z] != BlockType.Explosive)
                     player.ExplosiveList.RemoveAt(0);
+                else if (noTnt)
+                {
+                    player.ExplosiveList.RemoveAt(0);
+                    //ExplosionEffectAtPoint(x,y,z);
+                    // Remove the block that is detonating.
+                    SetBlock(x, y, z, BlockType.None, PlayerTeam.None);
+                }
                 else
                     DetonateAtPoint(x, y, z);
             }
@@ -1353,7 +1487,8 @@ namespace Infiniminer
                 msgBuffer.Write(position);
                 msgBuffer.Write(bPair.Value.ID);
                 msgBuffer.Write((byte)bPair.Value.Team);
-                netServer.SendMessage(msgBuffer, player.NetConn, NetChannel.ReliableInOrder2);
+                if (player.NetConn.Status == NetConnectionStatus.Connected)
+                    netServer.SendMessage(msgBuffer, player.NetConn, NetChannel.ReliableInOrder2);
             }
 
             // Let other players know about this player.

@@ -16,3 +16,9 @@ orefactor = 10
 
 # If this flag is true, all blocks will be free and the game will be unwinnable.
 sandbox = false
+
+# If true, tnt will just disappear instead of exploding
+notnt = true
+
+#If true, the public server list will be notified immediately when your server goes up - otherwise it will take a couple mintes / you can use announce
+autoannounce = true
