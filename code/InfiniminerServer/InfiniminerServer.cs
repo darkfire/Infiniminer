@@ -557,252 +557,256 @@ namespace Infiniminer
                 // Process any messages that are here.
                 while (netServer.ReadMessage(msgBuffer, out msgType, out msgSender))
                 {
-                    switch (msgType)
+                    try
                     {
-                        case NetMessageType.ConnectionApproval:
-                            {
-                                Player newPlayer = new Player(msgSender, null);
-                                newPlayer.Handle = InfiniminerGame.Sanitize(msgBuffer.ReadString()).Trim();
-                                if (newPlayer.Handle.Length == 0)
+                        switch (msgType)
+                        {
+                            case NetMessageType.ConnectionApproval:
                                 {
-                                    newPlayer.Handle = "Player";
-                                }
+                                    Player newPlayer = new Player(msgSender, null);
+                                    newPlayer.Handle = InfiniminerGame.Sanitize(msgBuffer.ReadString()).Trim();
+                                    if (newPlayer.Handle.Length == 0)
+                                    {
+                                        newPlayer.Handle = "Player";
+                                    }
 
-                                string clientVersion = msgBuffer.ReadString();
-                                if (clientVersion != InfiniminerGame.INFINIMINER_VERSION)
-                                {
-                                    msgSender.Disapprove("VER;" + InfiniminerGame.INFINIMINER_VERSION);
-                                }
-                                else if (banList.Contains(newPlayer.IP))
-                                {
-                                    msgSender.Disapprove("BAN;");
-                                }/*
+                                    string clientVersion = msgBuffer.ReadString();
+                                    if (clientVersion != InfiniminerGame.INFINIMINER_VERSION)
+                                    {
+                                        msgSender.Disapprove("VER;" + InfiniminerGame.INFINIMINER_VERSION);
+                                    }
+                                    else if (banList.Contains(newPlayer.IP))
+                                    {
+                                        msgSender.Disapprove("BAN;");
+                                    }/*
                                 else if (playerList.Count == maxPlayers)
                                 {
                                     msgSender.Disapprove("FULL;");
                                 }*/
-                                else
-                                {
-                                    playerList[msgSender] = newPlayer;
-                                    this.netServer.SanityCheck(msgSender);
-                                    msgSender.Approve();
+                                    else
+                                    {
+                                        playerList[msgSender] = newPlayer;
+                                        this.netServer.SanityCheck(msgSender);
+                                        msgSender.Approve();
+                                    }
                                 }
-                            }
-                            break;
+                                break;
 
-                        case NetMessageType.StatusChanged:
-                            {
-                                if (!this.playerList.ContainsKey(msgSender))
+                            case NetMessageType.StatusChanged:
                                 {
-                                    break;
+                                    if (!this.playerList.ContainsKey(msgSender))
+                                    {
+                                        break;
+                                    }
+
+                                    Player player = playerList[msgSender];
+
+                                    if (msgSender.Status == NetConnectionStatus.Connected)
+                                    {
+                                        ConsoleWrite("CONNECT: " + playerList[msgSender].Handle + " ( " + playerList[msgSender].IP + " )");
+                                        SendCurrentMap(msgSender);
+                                        SendPlayerJoined(player);
+                                        PublicServerListUpdate();
+                                    }
+
+                                    else if (msgSender.Status == NetConnectionStatus.Disconnected)
+                                    {
+                                        ConsoleWrite("DISCONNECT: " + playerList[msgSender].Handle);
+                                        SendPlayerLeft(player, player.Kicked ? "WAS KICKED FROM THE GAME!" : "HAS ABANDONED THEIR DUTIES!");
+                                        if (playerList.ContainsKey(msgSender))
+                                            playerList.Remove(msgSender);
+                                        PublicServerListUpdate();
+                                    }
                                 }
+                                break;
 
-                                Player player = playerList[msgSender];
-
-                                if (msgSender.Status == NetConnectionStatus.Connected)
+                            case NetMessageType.Data:
                                 {
-                                    ConsoleWrite("CONNECT: " + playerList[msgSender].Handle + " ( " + playerList[msgSender].IP + " )");
-                                    SendCurrentMap(msgSender);
-                                    SendPlayerJoined(player);
-                                    PublicServerListUpdate();
-                                }
+                                    if (!this.playerList.ContainsKey(msgSender))
+                                    {
+                                        break;
+                                    }
 
-                                else if (msgSender.Status == NetConnectionStatus.Disconnected)
-                                {
-                                    ConsoleWrite("DISCONNECT: " + playerList[msgSender].Handle);
-                                    SendPlayerLeft(player, player.Kicked ? "WAS KICKED FROM THE GAME!" : "HAS ABANDONED THEIR DUTIES!");
-                                    if (playerList.ContainsKey(msgSender))
-                                        playerList.Remove(msgSender);
-                                    PublicServerListUpdate();
-                                }
-                            }
-                            break;
-
-                        case NetMessageType.Data:
-							{
-                                if (!this.playerList.ContainsKey(msgSender))
-                                {
-                                    break;
-                                }
-
-                                Player player = playerList[msgSender];
-                                InfiniminerMessage dataType = (InfiniminerMessage)msgBuffer.ReadByte();
-                                switch (dataType)
-                                {
-                                    case InfiniminerMessage.ChatMessage:
-                                        {
-                                            // Read the data from the packet.
-                                            ChatMessageType chatType = (ChatMessageType)msgBuffer.ReadByte();
-                                            string chatString = InfiniminerGame.Sanitize(msgBuffer.ReadString());
-                                            ConsoleWrite("CHAT: (" + player.Handle + ") " + chatString);
-
-                                            // Append identifier information.
-                                            if (chatType == ChatMessageType.SayAll)
-                                                chatString = player.Handle + " (ALL): " + chatString;
-                                            else
-                                                chatString = player.Handle + " (TEAM): " + chatString;
-
-                                            // Construct the message packet.
-                                            NetBuffer chatPacket = netServer.CreateBuffer();
-                                            chatPacket.Write((byte)InfiniminerMessage.ChatMessage);
-                                            chatPacket.Write((byte)((player.Team == PlayerTeam.Red) ? ChatMessageType.SayRedTeam : ChatMessageType.SayBlueTeam));
-                                            chatPacket.Write(chatString);
-
-                                            // Send the packet to people who should recieve it.
-                                            foreach (Player p in playerList.Values)
+                                    Player player = playerList[msgSender];
+                                    InfiniminerMessage dataType = (InfiniminerMessage)msgBuffer.ReadByte();
+                                    switch (dataType)
+                                    {
+                                        case InfiniminerMessage.ChatMessage:
                                             {
-                                                if (chatType == ChatMessageType.SayAll ||
-                                                    chatType == ChatMessageType.SayBlueTeam && p.Team == PlayerTeam.Blue ||
-                                                    chatType == ChatMessageType.SayRedTeam && p.Team == PlayerTeam.Red)
-                                                    if (p.NetConn.Status == NetConnectionStatus.Connected)
-                                                        netServer.SendMessage(chatPacket, p.NetConn, NetChannel.ReliableInOrder3);
-                                            }
-                                        }
-                                        break;
+                                                // Read the data from the packet.
+                                                ChatMessageType chatType = (ChatMessageType)msgBuffer.ReadByte();
+                                                string chatString = InfiniminerGame.Sanitize(msgBuffer.ReadString());
+                                                ConsoleWrite("CHAT: (" + player.Handle + ") " + chatString);
 
-                                    case InfiniminerMessage.UseTool:
-                                        {
-                                            Vector3 playerPosition = msgBuffer.ReadVector3();
-                                            Vector3 playerHeading = msgBuffer.ReadVector3();
-                                            PlayerTools playerTool = (PlayerTools)msgBuffer.ReadByte();
-                                            BlockType blockType = (BlockType)msgBuffer.ReadByte();
-                                            switch (playerTool)
+                                                // Append identifier information.
+                                                if (chatType == ChatMessageType.SayAll)
+                                                    chatString = player.Handle + " (ALL): " + chatString;
+                                                else
+                                                    chatString = player.Handle + " (TEAM): " + chatString;
+
+                                                // Construct the message packet.
+                                                NetBuffer chatPacket = netServer.CreateBuffer();
+                                                chatPacket.Write((byte)InfiniminerMessage.ChatMessage);
+                                                chatPacket.Write((byte)((player.Team == PlayerTeam.Red) ? ChatMessageType.SayRedTeam : ChatMessageType.SayBlueTeam));
+                                                chatPacket.Write(chatString);
+
+                                                // Send the packet to people who should recieve it.
+                                                foreach (Player p in playerList.Values)
+                                                {
+                                                    if (chatType == ChatMessageType.SayAll ||
+                                                        chatType == ChatMessageType.SayBlueTeam && p.Team == PlayerTeam.Blue ||
+                                                        chatType == ChatMessageType.SayRedTeam && p.Team == PlayerTeam.Red)
+                                                        if (p.NetConn.Status == NetConnectionStatus.Connected)
+                                                            netServer.SendMessage(chatPacket, p.NetConn, NetChannel.ReliableInOrder3);
+                                                }
+                                            }
+                                            break;
+
+                                        case InfiniminerMessage.UseTool:
                                             {
-                                                case PlayerTools.Pickaxe:
-                                                    UsePickaxe(player, playerPosition, playerHeading);
-                                                    break;
-                                                case PlayerTools.ConstructionGun:
-                                                    UseConstructionGun(player, playerPosition, playerHeading, blockType);
-                                                    break;
-                                                case PlayerTools.DeconstructionGun:
-                                                    UseDeconstructionGun(player, playerPosition, playerHeading);
-                                                    break;
-                                                case PlayerTools.ProspectingRadar:
-                                                    UseSignPainter(player, playerPosition, playerHeading);
-                                                    break;
-                                                case PlayerTools.Detonator:
-                                                    UseDetonator(player);
-                                                    break;
+                                                Vector3 playerPosition = msgBuffer.ReadVector3();
+                                                Vector3 playerHeading = msgBuffer.ReadVector3();
+                                                PlayerTools playerTool = (PlayerTools)msgBuffer.ReadByte();
+                                                BlockType blockType = (BlockType)msgBuffer.ReadByte();
+                                                switch (playerTool)
+                                                {
+                                                    case PlayerTools.Pickaxe:
+                                                        UsePickaxe(player, playerPosition, playerHeading);
+                                                        break;
+                                                    case PlayerTools.ConstructionGun:
+                                                        UseConstructionGun(player, playerPosition, playerHeading, blockType);
+                                                        break;
+                                                    case PlayerTools.DeconstructionGun:
+                                                        UseDeconstructionGun(player, playerPosition, playerHeading);
+                                                        break;
+                                                    case PlayerTools.ProspectingRadar:
+                                                        UseSignPainter(player, playerPosition, playerHeading);
+                                                        break;
+                                                    case PlayerTools.Detonator:
+                                                        UseDetonator(player);
+                                                        break;
+                                                }
                                             }
-                                        }
-                                        break;
+                                            break;
 
-                                    case InfiniminerMessage.SelectClass:
-                                        {
-                                            PlayerClass playerClass = (PlayerClass)msgBuffer.ReadByte();
-                                            ConsoleWrite("SELECT_CLASS: " + player.Handle + ", " + playerClass.ToString());
-                                            switch (playerClass)
+                                        case InfiniminerMessage.SelectClass:
                                             {
-                                                case PlayerClass.Engineer:
-                                                    player.OreMax = 350;
-                                                    player.WeightMax = 4;
-                                                    break;
-                                                case PlayerClass.Miner:
-                                                    player.OreMax = 200;
-                                                    player.WeightMax = 8;
-                                                    break;
-                                                case PlayerClass.Prospector:
-                                                    player.OreMax = 200;
-                                                    player.WeightMax = 4;
-                                                    break;
-                                                case PlayerClass.Sapper:
-                                                    player.OreMax = 200;
-                                                    player.WeightMax = 4;
-                                                    break;
+                                                PlayerClass playerClass = (PlayerClass)msgBuffer.ReadByte();
+                                                ConsoleWrite("SELECT_CLASS: " + player.Handle + ", " + playerClass.ToString());
+                                                switch (playerClass)
+                                                {
+                                                    case PlayerClass.Engineer:
+                                                        player.OreMax = 350;
+                                                        player.WeightMax = 4;
+                                                        break;
+                                                    case PlayerClass.Miner:
+                                                        player.OreMax = 200;
+                                                        player.WeightMax = 8;
+                                                        break;
+                                                    case PlayerClass.Prospector:
+                                                        player.OreMax = 200;
+                                                        player.WeightMax = 4;
+                                                        break;
+                                                    case PlayerClass.Sapper:
+                                                        player.OreMax = 200;
+                                                        player.WeightMax = 4;
+                                                        break;
+                                                }
+                                                SendResourceUpdate(player);
                                             }
-                                            SendResourceUpdate(player);
-                                        }
-                                        break;
+                                            break;
 
-                                    case InfiniminerMessage.PlayerSetTeam:
-                                        {
-                                            PlayerTeam playerTeam = (PlayerTeam)msgBuffer.ReadByte();
-                                            ConsoleWrite("SELECT_TEAM: " + player.Handle + ", " + playerTeam.ToString());
-                                            player.Team = playerTeam;
-                                            SendResourceUpdate(player);
-                                            SendPlayerSetTeam(player);
-                                        }
-                                        break;
-
-                                    case InfiniminerMessage.PlayerDead:
-                                        {
-                                            ConsoleWrite("PLAYER_DEAD: " + player.Handle);
-                                            player.Ore = 0;
-                                            player.Cash = 0;
-                                            player.Weight = 0;
-                                            player.Alive = false;
-                                            SendResourceUpdate(player);
-                                            SendPlayerDead(player);
-
-                                            string deathMessage = msgBuffer.ReadString();
-                                            if (deathMessage != "")
+                                        case InfiniminerMessage.PlayerSetTeam:
                                             {
-                                                msgBuffer = netServer.CreateBuffer();
-                                                msgBuffer.Write((byte)InfiniminerMessage.ChatMessage);
-                                                msgBuffer.Write((byte)(player.Team == PlayerTeam.Red ? ChatMessageType.SayRedTeam : ChatMessageType.SayBlueTeam));
-                                                msgBuffer.Write(player.Handle + " " + deathMessage);
-                                                foreach (NetConnection netConn in playerList.Keys)
-                                                    if (netConn.Status == NetConnectionStatus.Connected)
-                                                        netServer.SendMessage(msgBuffer, netConn, NetChannel.ReliableInOrder3);
+                                                PlayerTeam playerTeam = (PlayerTeam)msgBuffer.ReadByte();
+                                                ConsoleWrite("SELECT_TEAM: " + player.Handle + ", " + playerTeam.ToString());
+                                                player.Team = playerTeam;
+                                                SendResourceUpdate(player);
+                                                SendPlayerSetTeam(player);
                                             }
-                                        }
-                                        break;
+                                            break;
 
-                                    case InfiniminerMessage.PlayerAlive:
-                                        {
-                                            ConsoleWrite("PLAYER_ALIVE: " + player.Handle);
-                                            player.Ore = 0;
-                                            player.Cash = 0;
-                                            player.Weight = 0;
-                                            player.Alive = true;
-                                            SendResourceUpdate(player);
-                                            SendPlayerAlive(player);
-                                        }
-                                        break;
+                                        case InfiniminerMessage.PlayerDead:
+                                            {
+                                                ConsoleWrite("PLAYER_DEAD: " + player.Handle);
+                                                player.Ore = 0;
+                                                player.Cash = 0;
+                                                player.Weight = 0;
+                                                player.Alive = false;
+                                                SendResourceUpdate(player);
+                                                SendPlayerDead(player);
 
-                                    case InfiniminerMessage.PlayerUpdate:
-                                        {
-                                            player.Position = msgBuffer.ReadVector3();
-                                            player.Heading = msgBuffer.ReadVector3();
-                                            player.Tool = (PlayerTools)msgBuffer.ReadByte();
-                                            player.UsingTool = msgBuffer.ReadBoolean();
-                                            SendPlayerUpdate(player);
-                                        }
-                                        break;
+                                                string deathMessage = msgBuffer.ReadString();
+                                                if (deathMessage != "")
+                                                {
+                                                    msgBuffer = netServer.CreateBuffer();
+                                                    msgBuffer.Write((byte)InfiniminerMessage.ChatMessage);
+                                                    msgBuffer.Write((byte)(player.Team == PlayerTeam.Red ? ChatMessageType.SayRedTeam : ChatMessageType.SayBlueTeam));
+                                                    msgBuffer.Write(player.Handle + " " + deathMessage);
+                                                    foreach (NetConnection netConn in playerList.Keys)
+                                                        if (netConn.Status == NetConnectionStatus.Connected)
+                                                            netServer.SendMessage(msgBuffer, netConn, NetChannel.ReliableInOrder3);
+                                                }
+                                            }
+                                            break;
 
-                                    case InfiniminerMessage.DepositOre:
-                                        {
-                                            DepositOre(player);
-                                            foreach (Player p in playerList.Values)
-                                                SendResourceUpdate(p);
-                                        }
-                                        break;
+                                        case InfiniminerMessage.PlayerAlive:
+                                            {
+                                                ConsoleWrite("PLAYER_ALIVE: " + player.Handle);
+                                                player.Ore = 0;
+                                                player.Cash = 0;
+                                                player.Weight = 0;
+                                                player.Alive = true;
+                                                SendResourceUpdate(player);
+                                                SendPlayerAlive(player);
+                                            }
+                                            break;
 
-                                    case InfiniminerMessage.WithdrawOre:
-                                        {
-                                            WithdrawOre(player);
-                                            foreach (Player p in playerList.Values)
-                                                SendResourceUpdate(p);
-                                        }
-                                        break;
+                                        case InfiniminerMessage.PlayerUpdate:
+                                            {
+                                                player.Position = msgBuffer.ReadVector3();
+                                                player.Heading = msgBuffer.ReadVector3();
+                                                player.Tool = (PlayerTools)msgBuffer.ReadByte();
+                                                player.UsingTool = msgBuffer.ReadBoolean();
+                                                SendPlayerUpdate(player);
+                                            }
+                                            break;
 
-                                    case InfiniminerMessage.PlayerPing:
-                                        {
-                                            SendPlayerPing((uint)msgBuffer.ReadInt32());
-                                        }
-                                        break;
+                                        case InfiniminerMessage.DepositOre:
+                                            {
+                                                DepositOre(player);
+                                                foreach (Player p in playerList.Values)
+                                                    SendResourceUpdate(p);
+                                            }
+                                            break;
 
-                                    case InfiniminerMessage.PlaySound:
-                                        {
-                                            InfiniminerSound sound = (InfiniminerSound)msgBuffer.ReadByte();
-                                            Vector3 position = msgBuffer.ReadVector3();
-                                            PlaySound(sound, position);
-                                        }
-                                        break;
+                                        case InfiniminerMessage.WithdrawOre:
+                                            {
+                                                WithdrawOre(player);
+                                                foreach (Player p in playerList.Values)
+                                                    SendResourceUpdate(p);
+                                            }
+                                            break;
+
+                                        case InfiniminerMessage.PlayerPing:
+                                            {
+                                                SendPlayerPing((uint)msgBuffer.ReadInt32());
+                                            }
+                                            break;
+
+                                        case InfiniminerMessage.PlaySound:
+                                            {
+                                                InfiniminerSound sound = (InfiniminerSound)msgBuffer.ReadByte();
+                                                Vector3 position = msgBuffer.ReadVector3();
+                                                PlaySound(sound, position);
+                                            }
+                                            break;
+                                    }
                                 }
-                            }
-                            break;
+                                break;
+                        }
                     }
+                    catch { }
                 }
 
                 //Time to backup map?
