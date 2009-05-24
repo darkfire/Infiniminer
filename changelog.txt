@@ -17,11 +17,28 @@ Featuers:
 		-New mouse sensitivity option
 	-Other
 		-Made server command "players" output how many people are playing and the player capacity
+		-Servers now have "bann <name>" and "kickn <name>" to kick/ban people by name instead of ip
+		-Command "toggle <tnt>" allows servers to enable/disable "fizzle tnt" mid-match
+		-Servers now display (on the server console) the ip of people as soon as they connect
+		-Map loading by server auto-disonnects everyone
 		-Help menu updated to reflect new key layout
 		-Server browser dims servers that are full
 		-Joining games now displays "Connecting..." while waiting for the server response
+		-Maps are automatically backed up by server every 5 minutes
+
 Bugfixes:
 	-Rare crash when 3D sound is played with invalid volume
 	-Spaces are now supported in names
 	-Fixed all of the warnings in source aside from "comparison to integral constant"
 	-Crash when sending a chat message at the end of a game
+	-All network communications now have exceptions caught - should make servers significantly more stable, as well as clients.
+	-Staggered updates to public server list should reduce lag but also reduce the accuracy of server listing player counts
+
+Buglist:
+	-Currently "autoannounce" flag in server.config.txt does nothing
+	-Every use of "reload" creates a map with more lava blocks, reason unknown - may not be clearing previous map correctly
+	-Clipping through corners allows rapid ascension to surface
+	-Can at various angles see thruogh walls
+	-Death messages do not always display
+	-Players can use tools and block types outside of their class
+	-At various angles building blocks build them in thin air, unattached to any nearby block
