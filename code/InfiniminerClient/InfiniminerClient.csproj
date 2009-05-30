@@ -95,6 +95,7 @@
     <Compile Include="ClickRegion.cs" />
     <Compile Include="DatafileLoader.cs" />
     <Compile Include="Engines\ParticleEngine.cs" />
+    <Compile Include="EventInput.cs" />
     <Compile Include="HTTPRequest.cs" />
     <Compile Include="InfiniminerGame.cs" />
     <Compile Include="Engines\InterfaceEngine.cs" />

@@ -5,6 +5,7 @@ Featuers:
 		-Tool hotkeys - numbers 1 through 5 switch directly to the correct tool (eg. 1 is pickaxe)
 		-New death messages, stored in easy-to-modify variables
 		-Server name is displayed at the top of the scoreboard
+		-Input to the chat buffer now has correct localization and will not drop keys
 		-Change in road graphics to be less dull
 	-Nametags
 		-Now coloured the team's colour instead of white
@@ -17,9 +18,9 @@ Featuers:
 		-Fully functional settings menu! Provides an easy-to-use interface to edit all the settings available in client.config.txt
 		-New mouse sensitivity option
 	-Server
-		-New settings of spherical tnt explosions, lava that can spread with only more lava as support (fills holes), and lava that absorbs shock blocks
+		-New settings of spherical tnt explosions, lava that can spread with only more lava as support (fills holes), lava that absorbs shock blocks (Fish's concept), and road blocks that absorb lava beneath them (also Fish's concept)
 		-Variables such as server name, tnt toggles, max players, etc. can be changed mid-game via the server console - try "listvars" and "<var> = <value"
-		-Public server list updates are now run in a seperate thread, removing lag whenever a player joins
+		-Public server list updates and map sending are now run in seperate threads, removing lag whenever a player joins
 		-Made server command "players" output how many people are playing and the player capacity
 		-Servers now have "bann <name>" and "kickn <name>" to kick/ban people by name instead of ip
 		-Servers now display (in the server console) the ip of people as soon as they connect
@@ -38,6 +39,8 @@ Bugfixes:
 	-All network communications now have exceptions caught - should make servers significantly more stable, as well as clients.
 	-Staggered updates to public server list should reduce lag but also reduce the accuracy of server listing player counts
 	-Public server list updates are run in a seperate thread to remove lag on player join
+	-Fixed aforementioned thread which would go into an infinite cycle of stopping and starting
+	-Map sending is threaded to further remove lag on player join
 
 Buglist:
 	-Every use of "reload" creates a map with more lava blocks - may not be clearing previous map correctly

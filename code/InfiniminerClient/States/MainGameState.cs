@@ -334,6 +334,44 @@ namespace Infiniminer.States
             _SM.Window.Title = "Infiniminer";
         }
 
+        public override void OnCharEntered(EventInput.CharacterEventArgs e)
+        {
+            if ((int)e.Character < 32 || (int)e.Character > 126) //From space to tilde
+                return; //Do nothing
+            if (_P.chatMode != ChatMessageType.None)
+            {
+                if (Keyboard.GetState().IsKeyDown(Keys.LeftControl) || Keyboard.GetState().IsKeyDown(Keys.RightControl))
+                {
+                    /*if (e.Character == (int)'v')
+                    {
+                        _P.chatEntryBuffer += System.Windows.Forms.Clipboard.GetText();
+                        return;
+                    }
+                    else if (key == Keys.C)
+                    {
+                        System.Windows.Forms.Clipboard.SetText(_P.chatEntryBuffer);
+                        return;
+                    }
+                    else if (key == Keys.X)
+                    {
+                        System.Windows.Forms.Clipboard.SetText(_P.chatEntryBuffer);
+                        _P.chatEntryBuffer = "";
+                        return;
+                    }*/
+                }
+                else
+                {
+                    _P.chatEntryBuffer += e.Character;
+                }
+            }
+            else if (e.Character.ToString().ToLower().Equals("y"))
+            {
+                _P.chatMode = ChatMessageType.SayAll;
+            }else if (e.Character.ToString().ToLower().Equals("u"))
+                _P.chatMode = _P.playerTeam == PlayerTeam.Red ? ChatMessageType.SayRedTeam : ChatMessageType.SayBlueTeam;
+
+        }
+
         public override void OnKeyDown(Keys key)
         {
             // Exit!
@@ -403,18 +441,19 @@ namespace Infiniminer.States
                     _P.chatEntryBuffer = "";
                     _P.chatMode = ChatMessageType.None;
                 }
-                else if (keyMap.IsKeyMapped(key))
+                /*else if (keyMap.IsKeyMapped(key))
                 {
                     _P.chatEntryBuffer += keyMap.TranslateKey(key, Keyboard.GetState().IsKeyDown(Keys.LeftShift) || Keyboard.GetState().IsKeyDown(Keys.RightShift));
-                }
+                }*/
                 return;
             }
 
-            if (key == Keys.Y)
+            /*if (key == Keys.Y)
                 _P.chatMode = ChatMessageType.SayAll;
 
             if (key == Keys.U)
                 _P.chatMode = _P.playerTeam == PlayerTeam.Red ? ChatMessageType.SayRedTeam : ChatMessageType.SayBlueTeam;
+            */
 
             if (!_P.playerDead)
             {

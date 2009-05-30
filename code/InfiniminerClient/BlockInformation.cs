@@ -114,6 +114,11 @@ namespace Infiniminer
 
         public static BlockTexture GetTexture(BlockType blockType, BlockFaceDirection faceDir)
         {
+            return GetTexture(blockType, faceDir, BlockType.None);
+        }
+
+        public static BlockTexture GetTexture(BlockType blockType, BlockFaceDirection faceDir, BlockType blockAbove)
+        {
             switch (blockType)
             {
                 case BlockType.Metal:
@@ -173,7 +178,7 @@ namespace Infiniminer
                 case BlockType.Road:
                     if (faceDir == BlockFaceDirection.YIncreasing)
                         return BlockTexture.RoadTop;
-                    else if (faceDir == BlockFaceDirection.YDecreasing)
+                    else if (faceDir == BlockFaceDirection.YDecreasing||blockAbove!=BlockType.None) //Looks better but won't work with current graphics setup...
                         return BlockTexture.RoadBottom;
                     return BlockTexture.Road;
 

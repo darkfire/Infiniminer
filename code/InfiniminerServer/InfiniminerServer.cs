@@ -12,7 +12,7 @@ namespace Infiniminer
     public class InfiniminerServer
     {
         InfiniminerNetServer netServer = null;
-        BlockType[, ,] blockList = null;    // In game coordinates, where Y points up.
+        public BlockType[, ,] blockList = null;    // In game coordinates, where Y points up.
         PlayerTeam[, ,] blockCreatorTeam = null;
         const int MAPSIZE = 64;
         Dictionary<NetConnection, Player> playerList = new Dictionary<NetConnection, Player>();
@@ -69,6 +69,7 @@ namespace Infiniminer
             varBind("tnt", "TNT explosions", false, true);
             varBind("stnt", "Spherical TNT explosions", true, true);
             varBind("sspreads", "Lava spreading via shock blocks", true, false);
+            varBind("roadabsorbs", "Letting road blocks above lava absorb it", true, false);
             varBind("insanelava", "Insane lava spreading, so as to fill any hole", false, false);
             varBind("minelava", "Lava pickaxe mining", true, false);
             //***New***
@@ -622,7 +623,12 @@ namespace Infiniminer
                 case "announce":
                     {
                         PublicServerListUpdate(true);
-                        ConsoleWrite("Updating public server list...");
+                        //ConsoleWrite("Updating public server list...");
+                    }
+                    break;
+                case "threads":
+                    {
+                        ConsoleWrite("Currently " + mapSendingProgress.Count + " map sending threads active.");
                     }
                     break;
                 case "players":
@@ -1077,6 +1083,8 @@ namespace Infiniminer
                 varSet("insanelava", bool.Parse(dataFile.Data["insanelava"]), true);// insaneLava = bool.Parse(dataFile.Data["insanelava"]);
             if (dataFile.Data.ContainsKey("shockspreadslava"))
                 varSet("sspreads", bool.Parse(dataFile.Data["shockspreadslava"]), true);// shockSpreadsLava = bool.Parse(dataFile.Data["shockspreadslava"]);
+            if (dataFile.Data.ContainsKey("roadabsorbs"))
+                varSet("roadabsorbs", bool.Parse(dataFile.Data["roadabsorbs"]), true);
             if (dataFile.Data.ContainsKey("minelava"))
                 varSet("minelava", bool.Parse(dataFile.Data["minelava"]), true);// mineLava = bool.Parse(dataFile.Data["minelava"]);
             bool autoannounce = true;
@@ -1398,6 +1406,9 @@ namespace Infiniminer
                 //if (updateTimeSpan.TotalMinutes > 2)
                     PublicServerListUpdate(); //It checks for public server / time span
 
+                //Time to terminate finished map sending threads?
+                TerminateFinishedThreads();
+
                 // Check for players who are in the zone to deposit.
                 DepositForPlayers();
 
@@ -1489,6 +1500,7 @@ namespace Infiniminer
                             // if the block below is empty space, add lava there
                             // if the block below is something solid (or insane lava is on), add lava to the sides
                             // if shock block spreading is enabled and there is a schock block in any direction...
+                            // if road block above and roadabsorbs is enabled then contract
                             if (varGetB("sspreads"))
                             {
                                 BlockType typeAbove = ((int)j == MAPSIZE - 1) ? BlockType.None : blockList[i, j + 1, k];
@@ -1518,6 +1530,15 @@ namespace Infiniminer
                                     flowSleep[i, j + 1, k] = true;
                                 }
                                 //Don't spread down...
+                            }
+                            if (varGetB("roadabsorbs"))
+                            {
+                                BlockType typeAbove = ((int)j == MAPSIZE - 1) ? BlockType.None : blockList[i, j + 1, k];
+                                if (typeAbove == BlockType.Road)
+                                {
+                                    SetBlock(i, j, k, BlockType.Road, PlayerTeam.None);
+                                    flowSleep[i, j, k] = true;
+                                }
                             }
                             BlockType typeBelow = (j == 0) ? BlockType.Lava : blockList[i, j - 1, k];
                             if (typeBelow == BlockType.None)
@@ -2056,7 +2077,32 @@ namespace Infiniminer
             netServer.SendMessage(msgBuffer, player.NetConn, NetChannel.ReliableInOrder1);
         }
 
+        List<MapSender> mapSendingProgress = new List<MapSender>();
+
+        public void TerminateFinishedThreads()
+        {
+            List<MapSender> mapSendersToRemove = new List<MapSender>();
+            foreach (MapSender ms in mapSendingProgress)
+            {
+                if (ms.finished)
+                {
+                    ms.stop();
+                    mapSendersToRemove.Add(ms);
+                }
+            }
+            foreach (MapSender ms in mapSendersToRemove)
+            {
+                mapSendingProgress.Remove(ms);
+            }
+        }
+
         public void SendCurrentMap(NetConnection client)
+        {
+            MapSender ms = new MapSender(client, this, netServer, MAPSIZE);
+            mapSendingProgress.Add(ms);
+        }
+
+        /*public void SendCurrentMapB(NetConnection client)
         {
             Debug.Assert(MAPSIZE == 64, "The BlockBulkTransfer message requires a map size of 64.");
             
@@ -2073,7 +2119,7 @@ namespace Infiniminer
                     if (client.Status == NetConnectionStatus.Connected)
                         netServer.SendMessage(msgBuffer, client, NetChannel.ReliableUnordered);
                 }
-        }
+        }*/
 
         public void SendPlayerPing(uint playerId)
         {
@@ -2259,19 +2305,23 @@ namespace Infiniminer
         }
 
         Thread updater;
-        bool updated = false;
+        bool updated = true;
 
         public void CommitUpdate()
         {
             try
             {
-                if (updater != null)
+                if (updated)
                 {
-                    updater.Abort();
+                    if (updater != null && !updater.IsAlive)
+                    {
+                        updater.Abort();
+                        updater.Join();
+                    }
+                    updated = false;
+                    updater = new Thread(new ThreadStart(this.RunUpdateThread));
+                    updater.Start();
                 }
-                updated = false;
-                updater = new Thread(new ThreadStart(this.RunUpdateThread));
-                updater.Start();
             }
             catch { }
         }
@@ -2287,6 +2337,8 @@ namespace Infiniminer
                 postDict["player_capacity"] = "" + varGetI("maxplayers");//maxPlayers;
                 postDict["extra"] = GetExtraInfo();
 
+                lastServerListUpdate = DateTime.Now;
+
                 try
                 {
                     HttpRequest.Post("http://apps.keithholman.net/post", postDict);
@@ -2297,7 +2349,6 @@ namespace Infiniminer
                     ConsoleWrite("PUBLICLIST: ERROR CONTACTING SERVER");
                 }
 
-                lastServerListUpdate = DateTime.Now;
                 updated = true;
             }
         }

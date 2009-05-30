@@ -47,6 +47,10 @@ namespace StateMasher
         {
         }
 
+        public virtual void OnCharEntered(EventInput.CharacterEventArgs e)
+        {
+        }
+
         public virtual void OnKeyDown(Keys key)
         {
         }
