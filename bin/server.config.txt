@@ -18,7 +18,16 @@ orefactor = 10
 sandbox = false
 
 # If true, tnt will just disappear instead of exploding
-notnt = true
+notnt = false
 
-#If true, the public server list will be notified immediately when your server goes up - otherwise it will take a couple mintes / you can use announce
+# If true, tnt explosions will be spherical - currently not implemented
+sphericaltnt = true
+
+# If true, lava will be aggressive - it won't need solid ground to spread!
+insanelava = false
+
+# If true, lava will spread to shock blocks to the side and above - allows for "piping" lava to new areas or flooding places
+shockspreadslava = true
+
+# If true, the public server list will be notified immediately when your server goes up - otherwise it will take a couple mintes / you can use announce
 autoannounce = true

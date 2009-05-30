@@ -5,6 +5,7 @@ Featuers:
 		-Tool hotkeys - numbers 1 through 5 switch directly to the correct tool (eg. 1 is pickaxe)
 		-New death messages, stored in easy-to-modify variables
 		-Server name is displayed at the top of the scoreboard
+		-Change in road graphics to be less dull
 	-Nametags
 		-Now coloured the team's colour instead of white
 		-The other team's players get nametags too, which will appear when you're close and can see them
@@ -15,16 +16,19 @@ Featuers:
 	-Settings
 		-Fully functional settings menu! Provides an easy-to-use interface to edit all the settings available in client.config.txt
 		-New mouse sensitivity option
-	-Other
+	-Server
+		-New settings of spherical tnt explosions, lava that can spread with only more lava as support (fills holes), and lava that absorbs shock blocks
+		-Variables such as server name, tnt toggles, max players, etc. can be changed mid-game via the server console - try "listvars" and "<var> = <value"
+		-Public server list updates are now run in a seperate thread, removing lag whenever a player joins
 		-Made server command "players" output how many people are playing and the player capacity
 		-Servers now have "bann <name>" and "kickn <name>" to kick/ban people by name instead of ip
-		-Command "toggle <tnt>" allows servers to enable/disable "fizzle tnt" mid-match
-		-Servers now display (on the server console) the ip of people as soon as they connect
+		-Servers now display (in the server console) the ip of people as soon as they connect
+		-Maps are automatically backed up by server every 5 minutes
 		-Map loading by server auto-disonnects everyone
+	-Other
 		-Help menu updated to reflect new key layout
 		-Server browser dims servers that are full
 		-Joining games now displays "Connecting..." while waiting for the server response
-		-Maps are automatically backed up by server every 5 minutes
 
 Bugfixes:
 	-Rare crash when 3D sound is played with invalid volume
@@ -33,10 +37,10 @@ Bugfixes:
 	-Crash when sending a chat message at the end of a game
 	-All network communications now have exceptions caught - should make servers significantly more stable, as well as clients.
 	-Staggered updates to public server list should reduce lag but also reduce the accuracy of server listing player counts
+	-Public server list updates are run in a seperate thread to remove lag on player join
 
 Buglist:
-	-Currently "autoannounce" flag in server.config.txt does nothing
-	-Every use of "reload" creates a map with more lava blocks, reason unknown - may not be clearing previous map correctly
+	-Every use of "reload" creates a map with more lava blocks - may not be clearing previous map correctly
 	-Clipping through corners allows rapid ascension to surface
 	-Can at various angles see thruogh walls
 	-Death messages do not always display
