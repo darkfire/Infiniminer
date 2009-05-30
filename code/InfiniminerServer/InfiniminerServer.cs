@@ -626,11 +626,11 @@ namespace Infiniminer
                         //ConsoleWrite("Updating public server list...");
                     }
                     break;
-                case "threads":
+                /*case "threads":
                     {
                         ConsoleWrite("Currently " + mapSendingProgress.Count + " map sending threads active.");
                     }
-                    break;
+                    break;*/
                 case "players":
                     {
                         ConsoleWrite("( " + playerList.Count + " / " + varGetI("maxplayers") + " )");//maxPlayers + " )");
@@ -700,36 +700,6 @@ namespace Infiniminer
                             ConsoleWrite("Cannot toggle a string value.");
                         else
                             varReportStatus(args[1]);
-                        /*switch (args[1])
-                        {
-                            case "tnt":
-                                noTnt = !noTnt;
-                                MessageAll("TNT explosions are now " + (!noTnt ? "enabled." : "disabled."));
-                                break;
-                            case "stnt":
-                                sphericalTnt = !sphericalTnt;
-                                MessageAll("Spherical TNT explosions are now " + (sphericalTnt ? "enabled." : "disabled."));
-                                break;
-                            case "sspreads":
-                                shockSpreadsLava = !shockSpreadsLava;
-                                MessageAll("Shock blocks now " + (shockSpreadsLava ? "spread" : "do not spread") + " lava.");
-                                break;
-                            case "insanelava":
-                                insaneLava = !insaneLava;
-                                MessageAll("Lava will now spread " + (insaneLava ? "ferociously!" : "normally"));
-                                break;
-                            case "minelava":
-                                mineLava = !mineLava;
-                                MessageAll("Lava is " + (mineLava ? "now " : "no longer ") + "minable.");
-                                break;
-                            case "announcechanges":
-                                announceChanges = !announceChanges;
-                                ConsoleWrite(announceChanges ? "Changes will be announced." : "Changes will not be announced.");
-                                break;
-                            default:
-                                ConsoleWrite("Unkown toggle " + args[1] + "!");
-                                break;
-                        }*/
                     }
                     else
                         ConsoleWrite("Need variable name to toggle!");
@@ -749,10 +719,13 @@ namespace Infiniminer
 
                 case "say":
                     {
-                        string message = "SERVER: ";
-                        for (int i = 1; i < args.Length; i++)
-                            message += args[i] + " ";
-                        SendServerMessage(message);
+                        if (args.Length == 2)
+                        {
+                            string message = "SERVER: " + args[1];
+                            //for (int i = 1; i < args.Length; i++)
+                            //    message += args[i] + " ";
+                            SendServerMessage(message);
+                        }
                     }
                     break;
 
@@ -785,7 +758,6 @@ namespace Infiniminer
                     status();
                     break;
                 default: //Check / set var
-                    if (true)
                     {
                         string name = args[0];
                         int exists = varExists(name);
@@ -820,7 +792,16 @@ namespace Infiniminer
                         }
                         else
                         {
-                            ConsoleWrite("Unknown command/var.");
+                            char first=args[0].ToCharArray()[0];
+                            if (first == 'y' || first == 'Y')
+                            {
+                                string message = "SERVER: " + args[0].Substring(1);
+                                if (args.Length > 1)
+                                    message += (message!="SERVER: " ? " " : "") + args[1];
+                                SendServerMessage(message);
+                            }
+                            else
+                                ConsoleWrite("Unknown command/var.");
                         }
                     }
                     break;
@@ -2051,7 +2032,7 @@ namespace Infiniminer
             msgBuffer = netServer.CreateBuffer();
             msgBuffer.Write((byte)InfiniminerMessage.ChatMessage);
             msgBuffer.Write((byte)ChatMessageType.SayAll);
-            msgBuffer.Write(message);
+            msgBuffer.Write(InfiniminerGame.Sanitize(message));
             foreach (NetConnection netConn in playerList.Keys)
                 if (netConn.Status == NetConnectionStatus.Connected)
                     netServer.SendMessage(msgBuffer, netConn, NetChannel.ReliableInOrder3);

@@ -394,7 +394,7 @@ namespace Infiniminer
                                     case InfiniminerMessage.ChatMessage:
                                         {
                                             ChatMessageType chatType = (ChatMessageType)msgBuffer.ReadByte();
-                                            string chatString = msgBuffer.ReadString();
+                                            string chatString = Sanitize(msgBuffer.ReadString());
                                             //Time to break it up into multiple lines
                                             propertyBag.addChatMessage(chatString, chatType, 10);
                                         }

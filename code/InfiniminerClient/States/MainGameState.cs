@@ -91,10 +91,11 @@ namespace Infiniminer.States
             if (mouseInitialized && mouseState.LeftButton == ButtonState.Pressed && !_P.playerDead && _P.playerToolCooldown == 0 && _P.playerTools[_P.playerToolSelected] == PlayerTools.Pickaxe)
             {
                 _P.FirePickaxe();
-                if (_P.playerClass == PlayerClass.Miner)
+                _P.playerToolCooldown = _P.GetToolCooldown(PlayerTools.Pickaxe) * (_P.playerClass == PlayerClass.Miner ? 0.4f : 1.0f);
+                /*if (_P.playerClass == PlayerClass.Miner)
                     _P.playerToolCooldown = _P.GetToolCooldown(PlayerTools.Pickaxe) * 0.4f;
                 else
-                    _P.playerToolCooldown = _P.GetToolCooldown(PlayerTools.Pickaxe);
+                    _P.playerToolCooldown = _P.GetToolCooldown(PlayerTools.Pickaxe);*/
             }
 
             // Prospector radar stuff.
@@ -111,7 +112,7 @@ namespace Infiniminer.States
                 }
             }
 
-            // Update the player"s position.
+            // Update the player's position.
             if (!_P.playerDead)
                 UpdatePlayerPosition(gameTime, keyState);
 

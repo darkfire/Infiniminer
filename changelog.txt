@@ -24,6 +24,7 @@ Featuers:
 		-Made server command "players" output how many people are playing and the player capacity
 		-Servers now have "bann <name>" and "kickn <name>" to kick/ban people by name instead of ip
 		-Servers now display (in the server console) the ip of people as soon as they connect
+		-Servers now can chat just by putting y in front of their message - no need for "say "! It's like using the in-game client!
 		-Maps are automatically backed up by server every 5 minutes
 		-Map loading by server auto-disonnects everyone
 	-Other
@@ -41,6 +42,7 @@ Bugfixes:
 	-Public server list updates are run in a seperate thread to remove lag on player join
 	-Fixed aforementioned thread which would go into an infinite cycle of stopping and starting
 	-Map sending is threaded to further remove lag on player join
+	-Various crashes related to bad text input
 
 Buglist:
 	-Every use of "reload" creates a map with more lava blocks - may not be clearing previous map correctly
