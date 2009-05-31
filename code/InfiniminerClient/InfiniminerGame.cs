@@ -34,10 +34,17 @@ namespace Infiniminer
 
         public const string INFINIMINER_VERSION = "v1.5";
         public const int GROUND_LEVEL = 8;
-        public const string deathByLava = "HAD AN UNFORTUNATE SMELTING ACCIDENT!";
+        /*public const string deathByLava = "HAD AN UNFORTUNATE SMELTING ACCIDENT!";
         public const string deathByElec = "WAS LIT UP!";//"GOT TOO CLOSE TO THE POWER LINES!";
         public const string deathByExpl = "WAS KILLED BY AN EXPLOSION!";//SAW A BRIGHT FLASH";
         public const string deathByFall = "HAD A QUICK MEET WITH GRAVITY!";//SOLID GROUND!";
+        public const string deathByMiss = "WAS KILLED BY MISADVENTURE!";
+        public const string deathBySuic = "HAS COMMITED PIXELCIDE!";*/
+
+        public const string deathByLava = "WAS INCINERATED BY LAVA!";
+        public const string deathByElec = "WAS ELECTROCUTED!";
+        public const string deathByExpl = "WAS KILLED IN AN EXPLOSION!";
+        public const string deathByFall = "WAS KILLED BY GRAVITY!";
         public const string deathByMiss = "WAS KILLED BY MISADVENTURE!";
         public const string deathBySuic = "HAS COMMITED PIXELCIDE!";
         public static Color IM_BLUE = new Color(80, 150, 255);

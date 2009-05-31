@@ -151,9 +151,12 @@ namespace Infiniminer.States
                     {
                         // Fall damage of 0.5 maps to a screenEffectCounter value of 2, meaning that the effect doesn"t appear.
                         // Fall damage of 1.0 maps to a screenEffectCounter value of 0, making the effect very strong.
-                        _P.screenEffect = ScreenEffect.Fall;
-                        _P.screenEffectCounter = 2 - (fallDamage - 0.5) * 4;
-                        _P.PlaySoundForEveryone(InfiniminerSound.GroundHit, _P.playerPosition);
+                        if (standingOnBlock != BlockType.Jump)
+                        {
+                            _P.screenEffect = ScreenEffect.Fall;
+                            _P.screenEffectCounter = 2 - (fallDamage - 0.5) * 4;
+                            _P.PlaySoundForEveryone(InfiniminerSound.GroundHit, _P.playerPosition);
+                        }
                     }
                 }
 
@@ -386,6 +389,13 @@ namespace Infiniminer.States
             if (key == Keys.K && Keyboard.GetState().IsKeyDown(Keys.Escape) && !_P.playerDead)
             {
                 _P.KillPlayer(InfiniminerGame.deathBySuic);//"HAS COMMMITTED PIXELCIDE!");
+            }
+
+            //Map saving!
+            if ((Keyboard.GetState().IsKeyDown(Keys.LeftControl) || Keyboard.GetState().IsKeyDown(Keys.RightControl)) && key == Keys.S)
+            {
+                _P.SaveMap();
+                return;
             }
 
             if (_P.chatMode != ChatMessageType.None)

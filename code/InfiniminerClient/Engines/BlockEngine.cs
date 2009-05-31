@@ -85,7 +85,7 @@ namespace Infiniminer
 
     public class BlockEngine
     {
-        BlockType[,,] blockList = null;
+        public BlockType[,,] blockList = null;
         public BlockType[, ,] downloadList = null;
         Dictionary<uint,bool>[,] faceMap = null;
         BlockTexture[,] blockTextureMap = null;

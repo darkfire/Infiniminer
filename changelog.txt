@@ -7,6 +7,10 @@ Featuers:
 		-Server name is displayed at the top of the scoreboard
 		-Input to the chat buffer now has correct localization and will not drop keys
 		-Change in road graphics to be less dull
+		-Ctrl-S will now save the level under saved_SERVERNAME_TIMESTAMP.lvl. Note that this is not perfect as the client does not have which teams built what - as a result, removing blocks may not work correctly, in particular for forcefields which can then only be removed by the same team colour
+		-I changed the death messages back to the originals but still left the new ones commented
+		-Added an extra help message about banks being indestructible
+		-Made it so that the "damage" effect and landing sound is not played for landing on jump blocks without dying - makes jump courses easier to bear
 	-Nametags
 		-Now coloured the team's colour instead of white
 		-The other team's players get nametags too, which will appear when you're close and can see them
@@ -27,6 +31,12 @@ Featuers:
 		-Servers now can chat just by putting y in front of their message - no need for "say "! It's like using the in-game client!
 		-Maps are automatically backed up by server every 5 minutes
 		-Map loading by server auto-disonnects everyone
+		-New auto-load settings - you can specify your server to load a particular map when it starts (immediately, without generating one). This is also loaded if you try executing a blank load command
+		-New greeting feature - a message sent to players on their first spawn. The default is "Welcome [name] to my server!", where [name] is replaced by their name. Comment the option out of the config file to disable it
+		-Removed "reload" command as restart is more thorough
+		-Changed the way ips are outputted by the "players" command - they are now put on the next line, so that people with rediculously long names don't obscure their ip address for kicking/banning
+		-Made the server tell all players that it's changing map so when they disconnect they don't think it crashed
+		-Made server console output whether the level file to load was found or not
 	-Other
 		-Help menu updated to reflect new key layout
 		-Server browser dims servers that are full
@@ -43,6 +53,7 @@ Bugfixes:
 	-Fixed aforementioned thread which would go into an infinite cycle of stopping and starting
 	-Map sending is threaded to further remove lag on player join
 	-Various crashes related to bad text input
+	-Griefers could make themselves unbannable by obscuring their ip address with a rediculously long name
 
 Buglist:
 	-Every use of "reload" creates a map with more lava blocks - may not be clearing previous map correctly

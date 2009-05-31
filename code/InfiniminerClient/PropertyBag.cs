@@ -12,6 +12,7 @@ using Microsoft.Xna.Framework.Net;
 using Microsoft.Xna.Framework.Storage;
 using Lidgren.Network;
 using Lidgren.Network.Xna;
+using System.IO;
 
 namespace Infiniminer
 {
@@ -234,6 +235,39 @@ namespace Infiniminer
             }
         }
 
+        public PlayerTeam TeamFromBlock(BlockType bt)
+        {
+            switch (bt)
+            {
+                case BlockType.TransBlue:
+                case BlockType.SolidBlue:
+                case BlockType.BeaconBlue:
+                case BlockType.BankBlue:
+                    return PlayerTeam.Blue;
+                case BlockType.TransRed:
+                case BlockType.SolidRed:
+                case BlockType.BeaconRed:
+                case BlockType.BankRed:
+                    return PlayerTeam.Red;
+                default:
+                    return PlayerTeam.None;
+            }
+        }
+
+        public void SaveMap()
+        {
+            string filename = "saved_" + serverName.Replace(" ","") + "_" + (UInt64)DateTime.Now.ToBinary() + ".lvl";
+            FileStream fs = new FileStream(filename, FileMode.Create);
+            StreamWriter sw = new StreamWriter(fs);
+            for (int x = 0; x < 64; x++)
+                for (int y = 0; y < 64; y++)
+                    for (int z = 0; z < 64; z++)
+                        sw.WriteLine((byte)blockEngine.blockList[x, y, z] + "," + (byte)TeamFromBlock(blockEngine.blockList[x, y, z]));//(byte)blockEngine.blockCreatorTeam[x, y, z]);
+            sw.Close();
+            fs.Close();
+            addChatMessage("Map saved to " + filename, ChatMessageType.SayAll, 10f);//DateTime.Now.ToUniversalTime());
+        }
+
         public void KillPlayer(string deathMessage)
         {
             if (netClient.Status != NetConnectionStatus.Connected)
@@ -341,22 +375,22 @@ namespace Infiniminer
 
         public void addChatMessage(string chatString, ChatMessageType chatType, float timestamp)
         {
-            //Wordwrap handling
             string[] text = chatString.Split(' ');
-            string textFull="";
-            string textLine="";
+            string textFull = "";
+            string textLine = "";
             int newlines = 0;
 
-            float curWidth=0;
-            for(int i=0;i<text.Length;i++){//each(string part in text){
+            float curWidth = 0;
+            for (int i = 0; i < text.Length; i++)
+            {//each(string part in text){
                 string part = text[i];
-                if (i!=text.Length-1)
-                    part+=' '; //Correct for lost spaces
-                float incr=interfaceEngine.uiFont.MeasureString(part).X;
-                curWidth+=incr;
-                if (curWidth>1024-64) //Assume default resolution, unfortunately
+                if (i != text.Length - 1)
+                    part += ' '; //Correct for lost spaces
+                float incr = interfaceEngine.uiFont.MeasureString(part).X;
+                curWidth += incr;
+                if (curWidth > 1024 - 64) //Assume default resolution, unfortunately
                 {
-                    if (textLine.IndexOf(' ')<0)
+                    if (textLine.IndexOf(' ') < 0)
                     {
                         curWidth = 0;
                         textFull = textFull + "\n" + textLine;
@@ -369,8 +403,10 @@ namespace Infiniminer
                         textLine = part;
                     }
                     newlines++;
-                }else{
-                    textLine=textLine + part;
+                }
+                else
+                {
+                    textLine = textLine + part;
                 }
             }
             if (textLine != "")
@@ -381,7 +417,7 @@ namespace Infiniminer
 
             if (textFull == "")
                 textFull = chatString;
-            
+
             ChatMessage chatMsg = new ChatMessage(textFull, chatType, 10,newlines);
             
             chatBuffer.Insert(0, chatMsg);

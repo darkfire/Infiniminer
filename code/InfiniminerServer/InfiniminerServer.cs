@@ -23,6 +23,9 @@ namespace Infiniminer
         uint prevMaxPlayers = 16;
         //bool sandboxMode = false;
         bool includeLava = true;
+        string levelToLoad = "";
+        string greeter = "";
+        Dictionary<NetConnection, bool> greeted = new Dictionary<NetConnection, bool>();
 
         //Toggles
         //bool shockSpreadsLava = true;
@@ -80,6 +83,7 @@ namespace Infiniminer
 
             //String bindings
             varBind("name", "Server name as it appears on the server browser", "Unnamed Server");
+            varBind("greeter", "The message sent to new players", "");
 
             //Int bindings
             varBind("maxplayers", "Maximum player count", 16);
@@ -149,6 +153,12 @@ namespace Infiniminer
                     break;
                 case "explosionradius":
                     CalculateExplosionPattern();
+                    break;
+                case "greeter":
+                    /*PropertyBag _P = new PropertyBag(new InfiniminerGame(new string[]{}));
+                    string[] format = _P.ApplyWordrwap(varGetS("greeter"));
+                    */
+                    greeter = varGetS("greeter");
                     break;
             }
             return true;
@@ -613,7 +623,7 @@ namespace Infiniminer
                         ConsoleWrite(" listvars");
                         ConsoleWrite(" status");
                         ConsoleWrite(" restart");
-                        ConsoleWrite(" reload");
+                        //ConsoleWrite(" reload");
                         ConsoleWrite(" quit");
                     }
                     break;
@@ -641,7 +651,8 @@ namespace Infiniminer
                                 teamIdent = " (R)";
                             else if (p.Team == PlayerTeam.Blue)
                                 teamIdent = " (B)";
-                            ConsoleWrite(p.Handle + teamIdent + " - " + p.IP);
+                            ConsoleWrite(p.Handle + teamIdent);
+                            ConsoleWrite("  - " + p.IP);
                         }
                     }
                     break;
@@ -712,6 +723,7 @@ namespace Infiniminer
 
                 case "restart":
                     {
+                        disconnectAll();
                         restartTriggered = true;
                         restartTime = DateTime.Now;
                     }
@@ -742,18 +754,23 @@ namespace Infiniminer
                     {
                         if (args.Length >= 2)
                         {
-                            if (LoadLevel(args[1]))
+                            LoadLevel(args[1]);
+                            /*if (LoadLevel(args[1]))
                                 Console.WriteLine("Loaded level " + args[1]);
                             else
-                                Console.WriteLine("Level file not found!");
+                                Console.WriteLine("Level file not found!");*/
+                        }
+                        else if (levelToLoad != "")
+                        {
+                            LoadLevel(levelToLoad);
                         }
                     }
                     break;
-                case "reload":
+                /*case "reload":
                     disconnectAll();
                     ConsoleWrite("CALCULATING INITIAL LAVA FLOWS");
                     ConsoleWrite("TOTAL LAVA BLOCKS = " + newMap());
-                    break;
+                    break;*/
                 case "status":
                     status();
                     break;
@@ -825,9 +842,16 @@ namespace Infiniminer
 
         public bool LoadLevel(string filename)
         {
-            disconnectAll();
             try
             {
+                if (!File.Exists(filename))
+                {
+                    ConsoleWrite("Unable to load level - " + filename + " does not exist!");
+                    return false;
+                }
+                SendServerMessage("Changing map to " + filename + "!");
+                disconnectAll();
+                
                 FileStream fs = new FileStream(filename, FileMode.Open);
                 StreamReader sr = new StreamReader(fs);
                 for (int x = 0; x < 64; x++)
@@ -844,6 +868,7 @@ namespace Infiniminer
                         }
                 sr.Close();
                 fs.Close();
+                ConsoleWrite("Level loaded successfully - now playing " + filename + "!");
                 return true;
             }
             catch { }
@@ -1068,6 +1093,11 @@ namespace Infiniminer
                 varSet("roadabsorbs", bool.Parse(dataFile.Data["roadabsorbs"]), true);
             if (dataFile.Data.ContainsKey("minelava"))
                 varSet("minelava", bool.Parse(dataFile.Data["minelava"]), true);// mineLava = bool.Parse(dataFile.Data["minelava"]);
+            if (dataFile.Data.ContainsKey("levelname"))
+                levelToLoad = dataFile.Data["levelname"];
+            if (dataFile.Data.ContainsKey("greeter"))
+                varSet("greeter", dataFile.Data["greeter"],true);
+
             bool autoannounce = true;
             if (dataFile.Data.ContainsKey("autoannounce"))
                 autoannounce = bool.Parse(dataFile.Data["autoannounce"]);
@@ -1100,13 +1130,24 @@ namespace Infiniminer
             // Store the last time that we did a flow calculation.
             DateTime lastFlowCalc = DateTime.Now;
 
-            // Calculate initial lava flows.
-            ConsoleWrite("CALCULATING INITIAL LAVA FLOWS");
-            /*for (int i=0; i<MAPSIZE*2; i++)
-                DoLavaStuff();*/
-            ConsoleWrite("TOTAL LAVA BLOCKS = " + newMap());//lavaBlockCount);
+            //Check if we should autoload a level
+            if (dataFile.Data.ContainsKey("autoload") && bool.Parse(dataFile.Data["autoload"]))
+            {
+                blockList = new BlockType[MAPSIZE, MAPSIZE, MAPSIZE];
+                blockCreatorTeam = new PlayerTeam[MAPSIZE, MAPSIZE, MAPSIZE];
+                LoadLevel(levelToLoad);
+            }
+            else
+            {
+                // Calculate initial lava flows.
+                ConsoleWrite("CALCULATING INITIAL LAVA FLOWS");
+                /*for (int i=0; i<MAPSIZE*2; i++)
+                    DoLavaStuff();*/
+                ConsoleWrite("TOTAL LAVA BLOCKS = " + newMap());//lavaBlockCount);
+            }
+            
 
-            //Caculate the shape of tnt explosions, if spherical
+            //Caculate the shape of spherical tnt explosions
             CalculateExplosionPattern();
 
             // Send the initial server list update.
@@ -1151,6 +1192,7 @@ namespace Infiniminer
                                     else
                                     {
                                         playerList[msgSender] = newPlayer;
+                                        greeted[msgSender] = false;
                                         this.netServer.SanityCheck(msgSender);
                                         msgSender.Approve();
                                         PublicServerListUpdate(true);
@@ -1318,6 +1360,20 @@ namespace Infiniminer
 
                                         case InfiniminerMessage.PlayerAlive:
                                             {
+                                                if (!greeted.ContainsKey(msgSender)||!greeted[msgSender])
+                                                {
+                                                    string greeting = varGetS("greeter");
+                                                    greeting = greeting.Replace("[name]", playerList[msgSender].Handle);
+                                                    if (greeting != "")
+                                                    {
+                                                        NetBuffer greetBuffer = netServer.CreateBuffer();
+                                                        greetBuffer.Write((byte)InfiniminerMessage.ChatMessage);
+                                                        greetBuffer.Write((byte)ChatMessageType.SayAll);
+                                                        greetBuffer.Write(InfiniminerGame.Sanitize(greeting));
+                                                        netServer.SendMessage(greetBuffer, msgSender, NetChannel.ReliableInOrder3);
+                                                    }
+                                                    greeted[msgSender] = true;
+                                                }
                                                 ConsoleWrite("PLAYER_ALIVE: " + player.Handle);
                                                 player.Ore = 0;
                                                 player.Cash = 0;

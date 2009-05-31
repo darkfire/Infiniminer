@@ -23,13 +23,13 @@ namespace Infiniminer.States
         SpriteFont uiFont;
         string[] currentHint;
         
-        static string[] HINTS = new string[18]
+        static string[] HINTS = new string[19]
         {
             "Engineers can build bank blocks near ore veins for\nMiners to quickly fill the team's supplies.",
             "Sappers can use TNT to excavate around gold and\ndiamonds, as it does not destroy them.",
             "Gold occurs in veins that can run dozens of blocks\nin length; follow the veins!",
             "You can paste a server name or IP into the direct\nconnect field by using Ctrl-V.",
-            "The Engineer's jump blocks cost as much as a ladder\nblock but are far more efficient.",
+            "The Engineer's jump blocks cost as much as a ladder\nblock but are far more efficient for going up.",
             "Beacon blocks are shown on your teammates' radar.\nUse them to mark important locations.",
             "Build force fields to keep the enemy out of your tunnels.",
             "Shock blocks will kill anyone who touches their underside.",
@@ -41,8 +41,9 @@ namespace Infiniminer.States
             "Return gold and diamonds to the surface to collect loot for your team!",
             "Press Q to quickly signal your teammates.",
             "All constructions require metal ore.\nDig for some or take it from your team's banks.",
+            "Banks are indestructible - use them as walls even sappers can't pass!",
             "Don't have a scroll wheel?\nPress R to cycle through block types for the construction gun.",
-            "You can set your name and adjust your screen resolution\nby editing the client configuration file.",
+            "You can set your name and adjust your screen resolution\nby using the settings scree or the config files.",
         };
 
         public override void OnEnter(string oldState)
