@@ -57,9 +57,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\InfiniminerClient\InfiniminerClient.csproj">
-      <Project>{F5524591-8592-43F7-B4A8-E6FCC52F2A7B}</Project>
-      <Name>InfiniminerClient</Name>
+    <ProjectReference Include="..\InfiniminerShared\InfiniminerShared.csproj">
+      <Project>{CC122120-E018-43DA-B92D-EC368AA0CFF5}</Project>
+      <Name>InfiniminerShared</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

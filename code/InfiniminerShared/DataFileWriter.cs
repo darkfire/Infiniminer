@@ -42,7 +42,12 @@ namespace Infiniminer
                 sr.Close();
                 file.Close();
             }
-            catch { }
+            catch (Exception e)
+            {
+                Console.OpenStandardError();
+                Console.Out.WriteLine(e.ToString());
+                Console.Out.Close();
+            }
         }
 
         public int WriteChanges(string filename)

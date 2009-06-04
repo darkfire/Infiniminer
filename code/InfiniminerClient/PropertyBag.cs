@@ -16,115 +16,6 @@ using System.IO;
 
 namespace Infiniminer
 {
-    public enum PlayerClass
-    {
-        Prospector,
-        Miner,
-        Engineer,
-        Sapper
-    }
-
-    public enum PlayerTools
-    {
-        Pickaxe,
-        ConstructionGun,
-        DeconstructionGun,
-        ProspectingRadar,
-        Detonator,
-    }
-
-    public enum PlayerTeam
-    {
-        None,
-        Red,
-        Blue
-    }
-
-    public enum ScreenEffect
-    {
-        None,
-        Death,
-        Teleport,
-        Fall,
-        Explosion,
-    }
-
-    public enum ChatMessageType
-    {
-        None,
-        SayAll,
-        SayRedTeam,
-        SayBlueTeam,
-    }
-
-    public class ChatMessage
-    {
-        public string message;
-        public ChatMessageType type;
-        public float timestamp;
-        public int newlines;
-
-        public ChatMessage(string message, ChatMessageType type, float timestamp, int newlines)
-        {
-            this.message = message;
-            this.type = type;
-            this.timestamp = timestamp;
-            this.newlines = newlines;
-        }
-    }
-
-    public enum InfiniminerSound
-    {
-        DigDirt,
-        DigMetal,
-        Ping,
-        ConstructionGun,
-        Death,
-        CashDeposit,
-        ClickHigh,
-        ClickLow,
-        GroundHit,
-        Teleporter,
-        Jumpblock,
-        Explosion,
-        RadarLow,
-        RadarHigh,
-        RadarSwitch,
-    }
-
-    public enum InfiniminerMessage : byte
-    {
-        BlockBulkTransfer,      // x-value, y-value, followed by 64 bytes of blocktype ; 
-        BlockSet,               // x, y, z, type
-        UseTool,                // position, heading, tool, blocktype 
-        SelectClass,            // class
-        ResourceUpdate,         // ore, cash, weight, max ore, max weight, team ore, red cash, blue cash: ReliableInOrder1
-        DepositOre,
-        DepositCash,
-        WithdrawOre,
-        TriggerExplosion,       // position
-
-        PlayerUpdate,           // (uint id for server), position, heading, current tool, animate using (bool): UnreliableInOrder1
-        PlayerJoined,           // uint id, player name :ReliableInOrder2
-        PlayerLeft,             // uint id              :ReliableInOrder2
-        PlayerSetTeam,          // (uint id for server), byte team   :ReliableInOrder2
-        PlayerDead,             // (uint id for server) :ReliableInOrder2
-        PlayerAlive,            // (uint id for server) :ReliableInOrder2
-        PlayerPing,             // uint id
-
-        ChatMessage,            // byte type, string message : ReliableInOrder3
-        GameOver,               // byte team
-        PlaySound,              // byte sound, bool isPositional, ?Vector3 location : ReliableUnordered
-        TriggerConstructionGunAnimation,
-        SetBeacon,              // vector3 position, string text ("" means remove)
-    }
-
-    public class Beacon
-    {
-        public string ID;
-        public PlayerTeam Team;
-    }
-
     public class PropertyBag
     {
         // Game engines.
@@ -139,6 +30,9 @@ namespace Infiniminer
         public Dictionary<uint, Player> playerList = new Dictionary<uint, Player>();
         public bool[,] mapLoadProgress = null;
         public string serverName = "";
+
+        //Input stuff.
+        public KeyBindHandler keyBinds = null;
 
         // Player variables.
         public Camera playerCamera = null;

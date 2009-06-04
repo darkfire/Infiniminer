@@ -14,6 +14,7 @@ using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework.Net;
 using Microsoft.Xna.Framework.Storage;
 using Microsoft.Xna.Framework.Design;
+using Infiniminer;
 
 namespace InterfaceItems
 {

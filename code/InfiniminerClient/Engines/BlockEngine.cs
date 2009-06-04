@@ -13,17 +13,6 @@ using Microsoft.Xna.Framework.Storage;
 
 namespace Infiniminer
 {
-    public enum BlockFaceDirection : byte
-    {
-        XIncreasing,
-        XDecreasing,
-        YIncreasing,
-        YDecreasing,
-        ZIncreasing,
-        ZDecreasing,
-        MAXIMUM
-    }
-
     [Serializable]
     public struct VertexPositionTextureShade
     {

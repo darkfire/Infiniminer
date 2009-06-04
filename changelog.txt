@@ -21,6 +21,7 @@ Featuers:
 	-Settings
 		-Fully functional settings menu! Provides an easy-to-use interface to edit all the settings available in client.config.txt
 		-New mouse sensitivity option
+		-Clients now have full control over their keyboard + mouse binds - see keymap.txt
 	-Server
 		-New settings of spherical tnt explosions, lava that can spread with only more lava as support (fills holes), lava that absorbs shock blocks (Fish's concept), and road blocks that absorb lava beneath them (also Fish's concept)
 		-Variables such as server name, tnt toggles, max players, etc. can be changed mid-game via the server console - try "listvars" and "<var> = <value"

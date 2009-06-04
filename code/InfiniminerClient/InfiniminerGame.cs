@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.IO;
-using System.Windows.Forms;
+//using System.Windows.Forms;
 using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
@@ -32,40 +32,14 @@ namespace Infiniminer
         public bool NoSound = false;
         public float mouseSensitivity = 0.005f;
 
-        public const string INFINIMINER_VERSION = "v1.5";
-        public const int GROUND_LEVEL = 8;
-        /*public const string deathByLava = "HAD AN UNFORTUNATE SMELTING ACCIDENT!";
-        public const string deathByElec = "WAS LIT UP!";//"GOT TOO CLOSE TO THE POWER LINES!";
-        public const string deathByExpl = "WAS KILLED BY AN EXPLOSION!";//SAW A BRIGHT FLASH";
-        public const string deathByFall = "HAD A QUICK MEET WITH GRAVITY!";//SOLID GROUND!";
-        public const string deathByMiss = "WAS KILLED BY MISADVENTURE!";
-        public const string deathBySuic = "HAS COMMITED PIXELCIDE!";*/
-
-        public const string deathByLava = "WAS INCINERATED BY LAVA!";
-        public const string deathByElec = "WAS ELECTROCUTED!";
-        public const string deathByExpl = "WAS KILLED IN AN EXPLOSION!";
-        public const string deathByFall = "WAS KILLED BY GRAVITY!";
-        public const string deathByMiss = "WAS KILLED BY MISADVENTURE!";
-        public const string deathBySuic = "HAS COMMITED PIXELCIDE!";
-        public static Color IM_BLUE = new Color(80, 150, 255);
-        public static Color IM_RED = new Color(222, 24, 24);
+        //public Dictionary<Buttons, Keys> keyBinds = new Dictionary<Buttons, Keys>();
+        //public Dictionary<Buttons, MouseButton> mouseBinds = new Dictionary<Buttons, MouseButton>();
+        public KeyBindHandler keyBinds = new KeyBindHandler();
 
         public bool anyPacketsReceived = false;
 
         public InfiniminerGame(string[] args)
         {
-        }
-
-        public static string Sanitize(string input)
-        {
-            string output = "";
-            for (int i = 0; i < input.Length; i++)
-            {
-                char c = (char)input[i];
-                if (c >= 32 && c <= 126)
-                    output += c;
-            }
-            return output;
         }
 
         public void setServername(string newName)
@@ -85,7 +59,7 @@ namespace Infiniminer
             // Create our connect message.
             NetBuffer connectBuffer = propertyBag.netClient.CreateBuffer();
             connectBuffer.Write(propertyBag.playerHandle);
-            connectBuffer.Write(INFINIMINER_VERSION);
+            connectBuffer.Write(Defines.INFINIMINER_VERSION);
 
             // Connect to the server.
             propertyBag.netClient.Connect(serverEndPoint, connectBuffer.ToArray());
@@ -178,9 +152,9 @@ namespace Infiniminer
                             {
                                 string[] reason = msgBuffer.ReadString().Split(";".ToCharArray());
                                 if (reason.Length < 2 || reason[0] == "VER")
-                                    MessageBox.Show("Error: client/server version incompability!\r\nServer: " + msgBuffer.ReadString() + "\r\nClient: " + INFINIMINER_VERSION);
+                                    System.Windows.Forms.MessageBox.Show("Error: client/server version incompability!\r\nServer: " + msgBuffer.ReadString() + "\r\nClient: " + Defines.INFINIMINER_VERSION);
                                 else
-                                    MessageBox.Show("Error: you are banned from this server!");
+                                    System.Windows.Forms.MessageBox.Show("Error: you are banned from this server!");
                             }
                             catch { }
                             ChangeState("Infiniminer.States.ServerBrowserState");
@@ -303,7 +277,7 @@ namespace Infiniminer
                                             // Figure out what the effect is.
                                             float distFromExplosive = (blockPos + 0.5f * Vector3.One - propertyBag.playerPosition).Length();
                                             if (distFromExplosive < 3)
-                                                propertyBag.KillPlayer(deathByExpl);//"WAS KILLED IN AN EXPLOSION!");
+                                                propertyBag.KillPlayer(Defines.deathByExpl);//"WAS KILLED IN AN EXPLOSION!");
                                             else if (distFromExplosive < 8)
                                             {
                                                 // If we're not in explosion mode, turn it on with the minimum ammount of shakiness.
@@ -401,7 +375,7 @@ namespace Infiniminer
                                     case InfiniminerMessage.ChatMessage:
                                         {
                                             ChatMessageType chatType = (ChatMessageType)msgBuffer.ReadByte();
-                                            string chatString = Sanitize(msgBuffer.ReadString());
+                                            string chatString = Defines.Sanitize(msgBuffer.ReadString());
                                             //Time to break it up into multiple lines
                                             propertyBag.addChatMessage(chatString, chatType, 10);
                                         }
@@ -458,7 +432,7 @@ namespace Infiniminer
             BlockType upperBlock = propertyBag.blockEngine.BlockAtPoint(movePosition);
             if (upperBlock == BlockType.Lava || lowerBlock == BlockType.Lava || midBlock == BlockType.Lava)
             {
-                propertyBag.KillPlayer(deathByLava);//"HAD AN UNFORTUNATE SMELTING ACCIDENT");////"WAS INCINERATED BY LAVA!");
+                propertyBag.KillPlayer(Defines.deathByLava);//"HAD AN UNFORTUNATE SMELTING ACCIDENT");////"WAS INCINERATED BY LAVA!");
             }
         }
 
@@ -491,7 +465,42 @@ namespace Infiniminer
                 volumeLevel = Math.Max(0,Math.Min(1,float.Parse(dataFile.Data["volume"], System.Globalization.CultureInfo.InvariantCulture)));
             if (dataFile.Data.ContainsKey("sensitivity"))
                 mouseSensitivity=Math.Max(0.001f,Math.Min(0.05f,float.Parse(dataFile.Data["sensitivity"], System.Globalization.CultureInfo.InvariantCulture)/1000f));
-            //propertyBag.mouseSensitivity = mouseSensitivity;
+            
+            //Now to read the key bindings
+            if (!File.Exists("keymap.txt"))
+            {
+                FileStream temp = File.Create("keymap.txt");
+                temp.Close();
+                Console.WriteLine("Keymap file does not exist, creating.");
+            }
+            dataFile = new DatafileWriter("keymap.txt");
+            bool anyChanged = false;
+            foreach (string key in dataFile.Data.Keys)
+            {
+                try
+                {
+                    Buttons button = (Buttons)Enum.Parse(typeof(Buttons),dataFile.Data[key],true);
+                    if (Enum.IsDefined(typeof(Buttons), button))
+                    {
+                        if (keyBinds.BindKey(button, key, true))
+                        {
+                            anyChanged = true;
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Enum not defined for " + dataFile.Data[key] + ".");
+                    }
+                } catch { }
+            }
+
+            //If no keys are bound in this manner then create the default set
+            if (!anyChanged)
+            {
+                keyBinds.CreateDefaultSet();
+                keyBinds.SaveBinds(dataFile, "keymap.txt");
+                Console.WriteLine("Creating default keymap...");
+            }
             graphicsDeviceManager.ApplyChanges();
             base.Initialize();
         }
@@ -517,6 +526,7 @@ namespace Infiniminer
             propertyBag.playerHandle = playerHandle;
             propertyBag.volumeLevel = volumeLevel;
             propertyBag.mouseSensitivity = mouseSensitivity;
+            propertyBag.keyBinds = keyBinds;
             msgBuffer = propertyBag.netClient.CreateBuffer();
         }
 

@@ -27,13 +27,13 @@ namespace Infiniminer.States
 
         string nextState = null;
         bool mouseInitialized = false;
-        KeyMap keyMap;
+        //KeyMap keyMap;
 
         public override void OnEnter(string oldState)
         {
             _SM.IsMouseVisible = false;
 
-            keyMap = new KeyMap();
+            //keyMap = new KeyMap();
         }
 
         public override void OnLeave(string newState)
@@ -144,7 +144,7 @@ namespace Infiniminer.States
                     if (fallDamage >= 1)
                     {
                         _P.PlaySoundForEveryone(InfiniminerSound.GroundHit, _P.playerPosition);
-                        _P.KillPlayer(InfiniminerGame.deathByFall);//"WAS KILLED BY GRAVITY!");
+                        _P.KillPlayer(Defines.deathByFall);//"WAS KILLED BY GRAVITY!");
                         return;
                     }
                     else if (fallDamage > 0.5)
@@ -202,7 +202,7 @@ namespace Infiniminer.States
                     //    return;
 
                     case BlockType.Lava:
-                        _P.KillPlayer(InfiniminerGame.deathByLava);//"WAS INCINERATED BY LAVA!");
+                        _P.KillPlayer(Defines.deathByLava);//"WAS INCINERATED BY LAVA!");
                         return;
                 }
 
@@ -210,11 +210,11 @@ namespace Infiniminer.States
                 switch (hittingHeadOnBlock)
                 {
                     case BlockType.Shock:
-                        _P.KillPlayer(InfiniminerGame.deathByElec);//"WAS ELECTROCUTED!");
+                        _P.KillPlayer(Defines.deathByElec);//"WAS ELECTROCUTED!");
                         return;
 
                     case BlockType.Lava:
-                        _P.KillPlayer(InfiniminerGame.deathByLava);//"WAS INCINERATED BY LAVA!");
+                        _P.KillPlayer(Defines.deathByLava);//"WAS INCINERATED BY LAVA!");
                         return;
                 }
             }
@@ -223,7 +223,7 @@ namespace Infiniminer.States
             // Death by falling off the map.
             if (_P.playerPosition.Y < -30)
             {
-                _P.KillPlayer(InfiniminerGame.deathByMiss);//"WAS KILLED BY MISADVENTURE!");
+                _P.KillPlayer(Defines.deathByMiss);//"WAS KILLED BY MISADVENTURE!");
                 return;
             }
 
@@ -298,7 +298,7 @@ namespace Infiniminer.States
             // It"s solid there, so see if it"s a lava block. If so, touching it will kill us!
             if (upperBlock == BlockType.Lava || lowerBlock == BlockType.Lava || midBlock == BlockType.Lava)
             {
-                _P.KillPlayer(InfiniminerGame.deathByLava);//"WAS INCINERATED BY LAVA!");
+                _P.KillPlayer(Defines.deathByLava);//"WAS INCINERATED BY LAVA!");
                 return true;
             }
 
@@ -338,42 +338,168 @@ namespace Infiniminer.States
             _SM.Window.Title = "Infiniminer";
         }
 
+        DateTime startChat = DateTime.Now;
         public override void OnCharEntered(EventInput.CharacterEventArgs e)
         {
             if ((int)e.Character < 32 || (int)e.Character > 126) //From space to tilde
                 return; //Do nothing
             if (_P.chatMode != ChatMessageType.None)
             {
-                if (Keyboard.GetState().IsKeyDown(Keys.LeftControl) || Keyboard.GetState().IsKeyDown(Keys.RightControl))
-                {
-                    /*if (e.Character == (int)'v')
+                //Chat delay to avoid entering the "start chat" key, an unfortunate side effect of the new key bind system
+                TimeSpan diff = DateTime.Now - startChat;
+                if (diff.Milliseconds > 2)
+                    if (!(Keyboard.GetState().IsKeyDown(Keys.LeftControl) || Keyboard.GetState().IsKeyDown(Keys.RightControl)))
                     {
-                        _P.chatEntryBuffer += System.Windows.Forms.Clipboard.GetText();
-                        return;
+                        _P.chatEntryBuffer += e.Character;
                     }
-                    else if (key == Keys.C)
-                    {
-                        System.Windows.Forms.Clipboard.SetText(_P.chatEntryBuffer);
-                        return;
-                    }
-                    else if (key == Keys.X)
-                    {
-                        System.Windows.Forms.Clipboard.SetText(_P.chatEntryBuffer);
-                        _P.chatEntryBuffer = "";
-                        return;
-                    }*/
-                }
-                else
-                {
-                    _P.chatEntryBuffer += e.Character;
-                }
             }
-            else if (e.Character.ToString().ToLower().Equals("y"))
+            /*else if (e.Character.ToString().ToLower().Equals("y"))
             {
                 _P.chatMode = ChatMessageType.SayAll;
             }else if (e.Character.ToString().ToLower().Equals("u"))
                 _P.chatMode = _P.playerTeam == PlayerTeam.Red ? ChatMessageType.SayRedTeam : ChatMessageType.SayBlueTeam;
+            */
+        }
 
+        private void HandleInput(Buttons input)
+        {
+            switch (input)
+            {
+                case Buttons.Fire:
+                    if (_P.playerToolCooldown <= 0)
+                    {
+                        switch (_P.playerTools[_P.playerToolSelected])
+                        {
+                            // Disabled as everyone speed-mines now.
+                            //case PlayerTools.Pickaxe:
+                            //    if (_P.playerClass != PlayerClass.Miner)
+                            //        _P.FirePickaxe();
+                            //    break;
+
+                            case PlayerTools.ConstructionGun:
+                                _P.FireConstructionGun(_P.playerBlocks[_P.playerBlockSelected]);//, !(button == MouseButton.LeftButton));//_P.FireConstructionGun(_P.playerBlocks[_P.playerBlockSelected]);
+                                break;
+
+                            case PlayerTools.DeconstructionGun:
+                                _P.FireDeconstructionGun();
+                                break;
+
+                            case PlayerTools.Detonator:
+                                _P.PlaySound(InfiniminerSound.ClickHigh);
+                                _P.FireDetonator();
+                                break;
+
+                            case PlayerTools.ProspectingRadar:
+                                _P.FireRadar();
+                                break;
+                        }
+                    }
+                    break;
+                case Buttons.Jump:
+                    {
+                        Vector3 footPosition = _P.playerPosition + new Vector3(0f, -1.5f, 0f);
+                        if (_P.blockEngine.SolidAtPointForPlayer(footPosition) && _P.playerVelocity.Y == 0)
+                        {
+                            _P.playerVelocity.Y = JUMPVELOCITY;
+                            float amountBelowSurface = ((ushort)footPosition.Y) + 1 - footPosition.Y;
+                            _P.playerPosition.Y += amountBelowSurface + 0.01f;
+                        }
+                    }
+                    break;
+                case Buttons.ToolUp:
+                    _P.PlaySound(InfiniminerSound.ClickLow);
+                    _P.playerToolSelected += 1;
+                    if (_P.playerToolSelected >= _P.playerTools.Length)
+                        _P.playerToolSelected = 0;
+                    break;
+                case Buttons.ToolDown:
+                    _P.PlaySound(InfiniminerSound.ClickLow);
+                    _P.playerToolSelected -= 1;
+                    if (_P.playerToolSelected < 0)
+                        _P.playerToolSelected = _P.playerTools.Length;
+                    break;
+                case Buttons.Tool1:
+                    _P.playerToolSelected = 0;
+                    if (_P.playerToolSelected >= _P.playerTools.Length)
+                        _P.playerToolSelected = _P.playerTools.Length - 1;
+                    break;
+                case Buttons.Tool2:
+                    _P.playerToolSelected = 1;
+                    if (_P.playerToolSelected >= _P.playerTools.Length)
+                        _P.playerToolSelected = _P.playerTools.Length - 1;
+                    break;
+                case Buttons.Tool3:
+                    _P.playerToolSelected = 2;
+                    if (_P.playerToolSelected >= _P.playerTools.Length)
+                        _P.playerToolSelected = _P.playerTools.Length - 1;
+                    break;
+                case Buttons.Tool4:
+                    _P.playerToolSelected = 3;
+                    _P.PlaySound(InfiniminerSound.ClickLow);
+                    if (_P.playerToolSelected >= _P.playerTools.Length)
+                        _P.playerToolSelected = _P.playerTools.Length - 1;
+                    break;
+                case Buttons.Tool5:
+                    _P.playerToolSelected = 4;
+                    _P.PlaySound(InfiniminerSound.ClickLow);
+                    if (_P.playerToolSelected >= _P.playerTools.Length)
+                        _P.playerToolSelected = _P.playerTools.Length - 1;
+                    break;
+                case Buttons.BlockUp:
+                    if (_P.playerTools[_P.playerToolSelected] == PlayerTools.ConstructionGun)
+                    {
+                        _P.PlaySound(InfiniminerSound.ClickLow);
+                        _P.playerBlockSelected += 1;
+                        if (_P.playerBlockSelected >= _P.playerBlocks.Length)
+                            _P.playerBlockSelected = 0;
+                    }
+                    break;
+                case Buttons.BlockDown:
+                    if (_P.playerTools[_P.playerToolSelected] == PlayerTools.ConstructionGun)
+                    {
+                        _P.PlaySound(InfiniminerSound.ClickLow);
+                        _P.playerBlockSelected += 1;
+                        if (_P.playerBlockSelected >= _P.playerBlocks.Length)
+                            _P.playerBlockSelected = 0;
+                    }
+                    break;
+                case Buttons.Deposit:
+                    if (_P.AtBankTerminal())
+                    {
+                        _P.DepositOre();
+                        _P.PlaySound(InfiniminerSound.ClickHigh);
+                    }
+                    break;
+                case Buttons.Withdraw:
+                    if (_P.AtBankTerminal())
+                    {
+                        _P.WithdrawOre();
+                        _P.PlaySound(InfiniminerSound.ClickHigh);
+                    }
+                    break;
+                case Buttons.Ping:
+                    {
+                        NetBuffer msgBuffer = _P.netClient.CreateBuffer();
+                        msgBuffer.Write((byte)InfiniminerMessage.PlayerPing);
+                        msgBuffer.Write(_P.playerMyId);
+                        _P.netClient.SendMessage(msgBuffer, NetChannel.ReliableUnordered);
+                    }
+                    break;
+                case Buttons.ChangeClass:
+                    nextState = "Infiniminer.States.ClassSelectionState";
+                    break;
+                case Buttons.ChangeTeam:
+                    nextState = "Infiniminer.States.TeamSelectionState";
+                    break;
+                case Buttons.SayAll:
+                    _P.chatMode = ChatMessageType.SayAll;
+                    startChat = DateTime.Now;
+                    break;
+                case Buttons.SayTeam:
+                    _P.chatMode = _P.playerTeam == PlayerTeam.Red ? ChatMessageType.SayRedTeam : ChatMessageType.SayBlueTeam;
+                    startChat = DateTime.Now;
+                    break;
+            }
         }
 
         public override void OnKeyDown(Keys key)
@@ -388,7 +514,8 @@ namespace Infiniminer.States
             // Pixelcide!
             if (key == Keys.K && Keyboard.GetState().IsKeyDown(Keys.Escape) && !_P.playerDead)
             {
-                _P.KillPlayer(InfiniminerGame.deathBySuic);//"HAS COMMMITTED PIXELCIDE!");
+                _P.KillPlayer(Defines.deathBySuic);//"HAS COMMMITTED PIXELCIDE!");
+                return;
             }
 
             //Map saving!
@@ -452,12 +579,10 @@ namespace Infiniminer.States
                     _P.chatEntryBuffer = "";
                     _P.chatMode = ChatMessageType.None;
                 }
-                /*else if (keyMap.IsKeyMapped(key))
-                {
-                    _P.chatEntryBuffer += keyMap.TranslateKey(key, Keyboard.GetState().IsKeyDown(Keys.LeftShift) || Keyboard.GetState().IsKeyDown(Keys.RightShift));
-                }*/
                 return;
-            }
+            }else if (!_P.playerDead)
+                HandleInput((_SM as InfiniminerGame).keyBinds.GetBound(key));
+                
 
             /*if (key == Keys.Y)
                 _P.chatMode = ChatMessageType.SayAll;
@@ -466,11 +591,13 @@ namespace Infiniminer.States
                 _P.chatMode = _P.playerTeam == PlayerTeam.Red ? ChatMessageType.SayRedTeam : ChatMessageType.SayBlueTeam;
             */
 
-            if (!_P.playerDead)
+            if (false)//!_P.playerDead)
             {
                 // Jump!
-                if (key == Keys.Space)
+                if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.Jump,key))
                 {
+                //if (key == Keys.Space)
+                //{
                     Vector3 footPosition = _P.playerPosition + new Vector3(0f, -1.5f, 0f);
                     if (_P.blockEngine.SolidAtPointForPlayer(footPosition) && _P.playerVelocity.Y == 0)
                     {
@@ -481,8 +608,10 @@ namespace Infiniminer.States
                 }
 
                 // Change weapon!
-                if (key == Keys.E)
+                if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.ToolUp, key))
                 {
+                //if (key == Keys.E)
+                //{
                     _P.PlaySound(InfiniminerSound.ClickLow);
                     _P.playerToolSelected += 1;
                     if (_P.playerToolSelected >= _P.playerTools.Length)
@@ -490,7 +619,34 @@ namespace Infiniminer.States
                 }
 
                 // Change weapon directly!
-                if (key == Keys.D1 || key == Keys.D2 || key == Keys.D3 || key == Keys.D4 || key == Keys.D5)
+                {
+                    bool toolDirect = false;
+                    if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.Tool1,key)){
+                        _P.playerToolSelected = 0;
+                        toolDirect = true;
+                    }else if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.Tool2,key)){
+                        _P.playerToolSelected = 1;
+                        toolDirect = true;
+                    }else if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.Tool3,key)){
+                        _P.playerToolSelected = 2;
+                        toolDirect = true;
+                    }else if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.Tool4,key)){
+                        _P.playerToolSelected = 3;
+                        toolDirect = true;
+                    }else if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.Tool5,key)){
+                        _P.playerToolSelected = 4;
+                        toolDirect = true;
+                    }
+                
+                    if (toolDirect){
+                        _P.PlaySound(InfiniminerSound.ClickLow);
+                        // Make sure we don't go out of bounds
+                        if (_P.playerToolSelected >= _P.playerTools.Length)
+                            _P.playerToolSelected = _P.playerTools.Length - 1;
+                    }
+                }    
+
+                /*if (key == Keys.D1 || key == Keys.D2 || key == Keys.D3 || key == Keys.D4 || key == Keys.D5)
                 {
                     _P.PlaySound(InfiniminerSound.ClickLow);
                     switch (key)
@@ -509,10 +665,11 @@ namespace Infiniminer.States
                     // Make sure we don't go out of bounds
                     if (_P.playerToolSelected >= _P.playerTools.Length)
                         _P.playerToolSelected = _P.playerTools.Length - 1;
-                }
+                }*/
+                
 
                 // Change block type!
-                if (key == Keys.R && _P.playerTools[_P.playerToolSelected] == PlayerTools.ConstructionGun)
+                if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.ToolUp, key) && _P.playerTools[_P.playerToolSelected] == PlayerTools.ConstructionGun) // && key == Keys.R
                 {
                     _P.PlaySound(InfiniminerSound.ClickLow);
                     _P.playerBlockSelected += 1;
@@ -524,12 +681,12 @@ namespace Infiniminer.States
                 if (_P.AtBankTerminal())
                 {
                     //Now 8 and 9 keys
-                    if (key == Keys.D8)
+                    if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.Deposit,key))//if (key == Keys.D8)
                     {
                         _P.DepositOre();
                         _P.PlaySound(InfiniminerSound.ClickHigh);
                     }
-                    if (key == Keys.D9)
+                    if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.Withdraw, key)) //if (key == Keys.D9)
                     {
                         _P.WithdrawOre();
                         _P.PlaySound(InfiniminerSound.ClickHigh);
@@ -537,7 +694,7 @@ namespace Infiniminer.States
                 }
 
                 // Radar pings.
-                if (key == Keys.Q)
+                if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.Ping,key))// key == Keys.Q)
                 {
                     NetBuffer msgBuffer = _P.netClient.CreateBuffer();
                     msgBuffer.Write((byte)InfiniminerMessage.PlayerPing);
@@ -546,11 +703,11 @@ namespace Infiniminer.States
                 }
 
                 // Change class.
-                if (key == Keys.M && _P.playerPosition.Y > 64 - InfiniminerGame.GROUND_LEVEL)
+                if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.ChangeClass,key))//if (key == Keys.M && _P.playerPosition.Y > 64 - Defines.GROUND_LEVEL)
                     nextState = "Infiniminer.States.ClassSelectionState";
 
                 // Change team.
-                if (key == Keys.N)
+                if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.ChangeTeam,key))//if (key == Keys.N)
                     nextState = "Infiniminer.States.TeamSelectionState";
             }
         }
@@ -562,6 +719,15 @@ namespace Infiniminer.States
 
         public override void OnMouseDown(MouseButton button, int x, int y)
         {
+            // If we"re dead, come back to life.
+            if (_P.playerDead && _P.screenEffectCounter > 2)
+            {
+                _P.RespawnPlayer();
+            }else if (!_P.playerDead)
+            {
+                HandleInput((_SM as InfiniminerGame).keyBinds.GetBound(button));
+            }
+            /*
             // If we"re alive, use our currently selected tool!
             if (!_P.playerDead && _P.playerToolCooldown == 0)
             {
@@ -590,13 +756,7 @@ namespace Infiniminer.States
                         _P.FireRadar();
                         break;
                 }
-            }
-
-            // If we"re dead, come back to life.
-            if (_P.playerDead && _P.screenEffectCounter > 2)
-            {
-                _P.RespawnPlayer();
-            }
+            }*/
         }
 
         public override void OnMouseUp(MouseButton button, int x, int y)
@@ -608,6 +768,19 @@ namespace Infiniminer.States
         {
             if (_P.playerDead)
                 return;
+            else
+            {
+                if (scrollDelta >= 120)
+                {
+                    Console.WriteLine("Handling input for scroll up...");
+                    HandleInput((_SM as InfiniminerGame).keyBinds.GetBound(MouseButton.WheelUp));//.keyBinds.GetBound(button));
+                }
+                else if (scrollDelta <= -120)
+                {
+                    HandleInput((_SM as InfiniminerGame).keyBinds.GetBound(MouseButton.WheelDown));
+                }
+                return;
+            }
 
             if (scrollDelta == 120 && _P.playerTools[_P.playerToolSelected] == PlayerTools.ConstructionGun)
             {

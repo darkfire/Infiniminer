@@ -77,6 +77,17 @@ namespace Infiniminer
         MAXIMUM
     }
 
+    public enum BlockFaceDirection : byte
+    {
+        XIncreasing,
+        XDecreasing,
+        YIncreasing,
+        YDecreasing,
+        ZIncreasing,
+        ZDecreasing,
+        MAXIMUM
+    }
+
     public class BlockInformation
     {
         public static uint GetCost(BlockType blockType)

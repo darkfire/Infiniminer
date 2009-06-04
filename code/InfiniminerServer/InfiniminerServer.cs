@@ -892,7 +892,7 @@ namespace Infiniminer
         public void ConsoleRedraw()
         {
             Console.Clear();
-            ConsoleDrawCentered("INFINIMINER SERVER " + InfiniminerGame.INFINIMINER_VERSION, 0);
+            ConsoleDrawCentered("INFINIMINER SERVER " + Defines.INFINIMINER_VERSION, 0);
             ConsoleDraw("================================================================================", 0, 1);
             for (int i = 0; i < consoleText.Count; i++)
                 ConsoleDraw(consoleText[i], 0, i + 2);
@@ -1170,16 +1170,16 @@ namespace Infiniminer
                             case NetMessageType.ConnectionApproval:
                                 {
                                     Player newPlayer = new Player(msgSender, null);
-                                    newPlayer.Handle = InfiniminerGame.Sanitize(msgBuffer.ReadString()).Trim();
+                                    newPlayer.Handle = Defines.Sanitize(msgBuffer.ReadString()).Trim();
                                     if (newPlayer.Handle.Length == 0)
                                     {
                                         newPlayer.Handle = "Player";
                                     }
 
                                     string clientVersion = msgBuffer.ReadString();
-                                    if (clientVersion != InfiniminerGame.INFINIMINER_VERSION)
+                                    if (clientVersion != Defines.INFINIMINER_VERSION)
                                     {
-                                        msgSender.Disapprove("VER;" + InfiniminerGame.INFINIMINER_VERSION);
+                                        msgSender.Disapprove("VER;" + Defines.INFINIMINER_VERSION);
                                     }
                                     else if (banList.Contains(newPlayer.IP))
                                     {
@@ -1243,7 +1243,7 @@ namespace Infiniminer
                                             {
                                                 // Read the data from the packet.
                                                 ChatMessageType chatType = (ChatMessageType)msgBuffer.ReadByte();
-                                                string chatString = InfiniminerGame.Sanitize(msgBuffer.ReadString());
+                                                string chatString = Defines.Sanitize(msgBuffer.ReadString());
                                                 ConsoleWrite("CHAT: (" + player.Handle + ") " + chatString);
 
                                                 // Append identifier information.
@@ -1369,7 +1369,7 @@ namespace Infiniminer
                                                         NetBuffer greetBuffer = netServer.CreateBuffer();
                                                         greetBuffer.Write((byte)InfiniminerMessage.ChatMessage);
                                                         greetBuffer.Write((byte)ChatMessageType.SayAll);
-                                                        greetBuffer.Write(InfiniminerGame.Sanitize(greeting));
+                                                        greetBuffer.Write(Defines.Sanitize(greeting));
                                                         netServer.SendMessage(greetBuffer, msgSender, NetChannel.ReliableInOrder3);
                                                     }
                                                     greeted[msgSender] = true;
@@ -1506,7 +1506,7 @@ namespace Infiniminer
         {
             foreach (Player p in playerList.Values)
             {
-                if (p.Position.Y > 64 - InfiniminerGame.GROUND_LEVEL)
+                if (p.Position.Y > 64 - Defines.GROUND_LEVEL)
                     DepositCash(p);
             }
 
@@ -2088,7 +2088,7 @@ namespace Infiniminer
             msgBuffer = netServer.CreateBuffer();
             msgBuffer.Write((byte)InfiniminerMessage.ChatMessage);
             msgBuffer.Write((byte)ChatMessageType.SayAll);
-            msgBuffer.Write(InfiniminerGame.Sanitize(message));
+            msgBuffer.Write(Defines.Sanitize(message));
             foreach (NetConnection netConn in playerList.Keys)
                 if (netConn.Status == NetConnectionStatus.Connected)
                     netServer.SendMessage(msgBuffer, netConn, NetChannel.ReliableInOrder3);
