@@ -1,8 +1,28 @@
+#Format: key = command
+
+#Movement
 W = Forward
 S = Backward
 A = Left
 D = Right
 Space = Jump
+Shift = Sprint
+Control = Crouch
+LeftButton = Fire
+RightButton = Fire
+
+#Loadout
+D1 = Tool1
+D2 = Tool2
+D3 = Tool3
+D4 = Tool4
+D5 = Tool5
+WheelUp = BlockUp
+WheelDown = BlockDown
+E = ToolUp
+R = BlockUp
+
+#Misc
 Q = Ping
 D8 = Deposit
 D9 = Withdraw
@@ -10,16 +30,3 @@ Y = SayAll
 U = SayTeam
 M = ChangeClass
 N = ChangeTeam
-D1 = Tool1
-D2 = Tool2
-D3 = Tool3
-D4 = Tool4
-D5 = Tool5
-E = ToolUp
-R = BlockUp
-LeftButton = Fire
-RightButton = AltFire
-WheelUp = BlockUp
-WheelDown = BlockDown
-Shift = Sprint
-Control = Crouch

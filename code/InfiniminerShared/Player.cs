@@ -42,6 +42,16 @@ namespace Infiniminer
     public class Player
     {
         public bool Kicked = false; // set to true when a player is kicked to let other clients know they were kicked
+        public short admin = 0;
+        public bool IsAdmin
+        {
+            get
+            {
+                if (admin > 0)
+                    return true;
+                return false;
+            }
+        }
         public string Handle = "";
         public uint OreMax = 0;
         public uint WeightMax = 0;

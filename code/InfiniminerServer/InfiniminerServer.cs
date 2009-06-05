@@ -18,23 +18,14 @@ namespace Infiniminer
         Dictionary<NetConnection, Player> playerList = new Dictionary<NetConnection, Player>();
         int lavaBlockCount = 0;
         uint oreFactor = 10;
-        //bool publicServer = false;
-        //uint maxPlayers = 16;
         uint prevMaxPlayers = 16;
-        //bool sandboxMode = false;
         bool includeLava = true;
         string levelToLoad = "";
         string greeter = "";
-        Dictionary<NetConnection, bool> greeted = new Dictionary<NetConnection, bool>();
+        List<NetConnection> toGreet = new List<NetConnection>();
+        Dictionary<string, short> admins = new Dictionary<string, short>(); //Short represents power - 1 for mod, 2 for full admin
 
-        //Toggles
-        //bool shockSpreadsLava = true;
-        //bool noTnt = false;
-        //bool sphericalTnt = true;
-            bool[,,] tntExplosionPattern = new bool[0,0,0];
-            //int tntExplosionRadius = 3; //In blocks, can be double if wanted
-        //bool insaneLava = true;
-        //bool mineLava = true;
+        bool[,,] tntExplosionPattern = new bool[0,0,0];
         bool announceChanges = true;
 
         DateTime lastServerListUpdate = DateTime.Now;
@@ -256,7 +247,6 @@ namespace Infiniminer
                 if (!silent)
                 {
                     MessageAll(name + " = " + val.ToString());
-                    //varReportStatus(name, false);
                     varChangeCheckSpecial(name);
                 }
             }
@@ -427,6 +417,26 @@ namespace Infiniminer
             ConsoleWrite("Variable \"" + name + "\" does not exist!");
         }
 
+        public string varReportStatusString(string name, bool full)
+        {
+            if (varDescriptions.ContainsKey(name))
+            {
+                if (varBoolBindings.ContainsKey(name))
+                {
+                    return name + " = " + varBoolBindings[name].ToString();
+                }
+                else if (varStringBindings.ContainsKey(name))
+                {
+                    return name + " = " + varStringBindings[name];
+                }
+                else if (varIntBindings.ContainsKey(name))
+                {
+                    return name + " = " + varIntBindings[name];
+                }
+            }
+            return "";
+        }
+
         public InfiniminerServer()
         {
             Console.SetWindowSize(1, 1);
@@ -437,13 +447,13 @@ namespace Infiniminer
         public string GetExtraInfo()
         {
             string extraInfo = "";
-            if (varGetB("sandbox"))//sandboxMode)
+            if (varGetB("sandbox"))
                 extraInfo += "sandbox";
             else
                 extraInfo += string.Format("{0:#.##k}", winningCashAmount / 1000);
             if (!includeLava)
                 extraInfo += ", !lava";
-            if (!varGetB("tnt"))//noTnt)
+            if (!varGetB("tnt"))
                 extraInfo += ", !tnt";
             if (varGetB("insanelava") || varGetB("sspreads") || varGetB("stnt"))
                 extraInfo += ", MetMod";
@@ -463,41 +473,305 @@ namespace Infiniminer
 
         public void PublicServerListUpdate(bool doIt)
         {
-            if (!varGetB("public"))//publicServer)
+            if (!varGetB("public"))
                 return;
 
             TimeSpan updateTimeSpan = DateTime.Now - lastServerListUpdate;
             if (updateTimeSpan.TotalMinutes >= 1 || doIt)
-                CommitUpdate();//RunUpdateThread();
+                CommitUpdate();
+        }
 
-            /*Dictionary<string, string> postDict = new Dictionary<string, string>();
-            postDict["name"] = varGetS("name");//serverName;
-            postDict["game"] = "INFINIMINER";
-            postDict["player_count"] = "" + playerList.Keys.Count;
-            postDict["player_capacity"] = "" + varGetI("maxplayers");//maxPlayers;
-            postDict["extra"] = GetExtraInfo();
+        public bool ProcessCommand(string chat)
+        {
+            return ProcessCommand(chat, (short)1, null);
+        }
 
-
-            // Time to send a new server update?
-            TimeSpan updateTimeSpan = DateTime.Now - lastServerListUpdate;
-            if (updateTimeSpan.TotalMinutes > 2||doIt)
+        public bool ProcessCommand(string input, short authority, Player sender)
+        {
+            if (authority == 0)
+                return false;
+            string[] args = input.Split(' '.ToString().ToCharArray(),2);
+            if (args[0].StartsWith("\\") && args[0].Length > 1)
+                args[0] = args[0].Substring(1);
+            switch (args[0].ToLower())
             {
-                try
-                {
-                    HttpRequest.Post("http://apps.keithholman.net/post", postDict);
-                    ConsoleWrite("PUBLICLIST: UPDATING SERVER LISTING");
-                }
-                catch (Exception)
-                {
-                    ConsoleWrite("PUBLICLIST: ERROR CONTACTING SERVER");
-                }
-                lastServerListUpdate = DateTime.Now;
+                case "help":
+                    {
+                        if (sender == null)
+                        {
+                            ConsoleWrite("SERVER CONSOLE COMMANDS:");
+                            ConsoleWrite(" announce");
+                            ConsoleWrite(" players");
+                            ConsoleWrite(" kick <ip>");
+                            ConsoleWrite(" kickn <name>");
+                            ConsoleWrite(" ban <ip>");
+                            ConsoleWrite(" bann <name>");
+                            ConsoleWrite(" say <message>");
+                            ConsoleWrite(" save <mapfile>");
+                            ConsoleWrite(" load <mapfile>");
+                            ConsoleWrite(" toggle <var>");
+                            ConsoleWrite(" <var> <value>");
+                            ConsoleWrite(" <var>");
+                            ConsoleWrite(" listvars");
+                            ConsoleWrite(" status");
+                            ConsoleWrite(" restart");
+                            ConsoleWrite(" quit");
+                        }
+                        else
+                        {
+                            SendServerMessageToPlayer(sender.Handle + ", the " + args[0].ToLower() + " command is only for use in the server console.", sender.NetConn);
+                        }
+                    }
+                    break;
+                case "players":
+                    {
+                        if (sender == null)
+                        {
+                            ConsoleWrite("( " + playerList.Count + " / " + varGetI("maxplayers") + " )");
+                            foreach (Player p in playerList.Values)
+                            {
+                                string teamIdent = "";
+                                if (p.Team == PlayerTeam.Red)
+                                    teamIdent = " (R)";
+                                else if (p.Team == PlayerTeam.Blue)
+                                    teamIdent = " (B)";
+                                if (p.IsAdmin)
+                                    teamIdent += " (Admin)";
+                                ConsoleWrite(p.Handle + teamIdent);
+                                ConsoleWrite("  - " + p.IP);
+                            }
+                        }else{
+                            SendServerMessageToPlayer(sender.Handle + ", the " + args[0].ToLower() + " command is only for use in the server console.", sender.NetConn);
+                        }
+                    }
+                    break;
+                case "admins":
+                    {
+                        ConsoleWrite("Admin list:");
+                        foreach (string ip in admins.Keys)
+                            ConsoleWrite(ip);
+                    }
+                    break;
+                case "admin":
+                    {
+                        if (args.Length == 2)
+                        {
+                            if (sender == null || sender.admin >= 2)
+                                AdminPlayer(args[1]);
+                            else
+                                SendServerMessageToPlayer("You do not have the authority to add admins.", sender.NetConn);
+                        }
+                    }
+                    break;
+                case "adminn":
+                    {
+                        if (args.Length == 2)
+                        {
+                            if (sender == null || sender.admin >= 2)
+                                AdminPlayer(args[1],true);
+                            else
+                                SendServerMessageToPlayer("You do not have the authority to add admins.", sender.NetConn);
+                        }
+                    }
+                    break;
+                case "listvars":
+                    if (sender==null)
+                        varList(true);
+                    else{
+                        SendServerMessageToPlayer(sender.Handle + ", the " + args[0].ToLower() + " command is only for use in the server console.", sender.NetConn);
+                    }
+                    break;
+                case "status":
+                    if (sender == null)
+                        status();
+                    else
+                        SendServerMessageToPlayer(sender.Handle + ", the " + args[0].ToLower() + " command is only for use in the server console.", sender.NetConn);
+                    break;
+                case "announce":
+                    {
+                        PublicServerListUpdate(true);
+                    }
+                    break;
+                case "kick":
+                    {
+                        if (authority>=1&&args.Length == 2)
+                        {
+                            if (sender != null)
+                                ConsoleWrite("SERVER: " + sender.Handle + " has kicked " + args[1]);
+                            KickPlayer(args[1]);
+                        }
+                    }
+                    break;
+                case "kickn":
+                    {
+                        if (authority >= 1 && args.Length == 2)
+                        {
+                            if (sender != null)
+                                ConsoleWrite("SERVER: " + sender.Handle + " has kicked " + args[1]);
+                            KickPlayer(args[1], true);
+                        }
+                    }
+                    break;
+
+                case "ban":
+                    {
+                        if (authority >= 1 && args.Length == 2)
+                        {
+                            if (sender != null)
+                                ConsoleWrite("SERVER: " + sender.Handle + " has banned " + args[1]);
+                            BanPlayer(args[1]);
+                            KickPlayer(args[1]);
+                        }
+                    }
+                    break;
+
+                case "bann":
+                    {
+                        if (authority >= 1 && args.Length == 2)
+                        {
+                            if (sender != null)
+                                ConsoleWrite("SERVER: " + sender.Handle + " has bannec " + args[1]);
+                            BanPlayer(args[1], true);
+                            KickPlayer(args[1], true);
+                        }
+                    }
+                    break;
+
+                case "toggle":
+                    if (authority >= 1 && args.Length == 2)
+                    {
+                        int exists = varExists(args[1]);
+                        if (exists == 1)
+                        {
+                            bool val = varGetB(args[1]);
+                            varSet(args[1], !val);
+                        }
+                        else if (exists == 2)
+                            ConsoleWrite("Cannot toggle a string value.");
+                        else
+                            varReportStatus(args[1]);
+                    }
+                    else
+                        ConsoleWrite("Need variable name to toggle!");
+                    break;
+                case "quit":
+                    {
+                        if (authority >= 2){
+                            if ( sender!=null)
+                                ConsoleWrite(sender.Handle + " is shutting down the server.");
+                             keepRunning = false;
+                        }
+                    }
+                    break;
+
+                case "restart":
+                    {
+                        if (authority >= 2){
+                            if ( sender!=null)
+                                ConsoleWrite(sender.Handle + " is restarting the server.");
+                            disconnectAll();
+                            restartTriggered = true;
+                            restartTime = DateTime.Now;
+                        }
+                    }
+                    break;
+
+                case "say":
+                    {
+                        if (args.Length == 2)
+                        {
+                            string message = "SERVER: " + args[1];
+                            SendServerMessage(message);
+                        }
+                    }
+                    break;
+
+                case "save":
+                    {
+                        if (args.Length >= 2)
+                        {
+                            if (sender!=null)
+                                ConsoleWrite(sender.Handle + " is saving the map.");
+                            SaveLevel(args[1]);
+                        }
+                    }
+                    break;
+
+                case "load":
+                    {
+                        if (args.Length >= 2)
+                        {
+                            if (sender!=null)
+                                ConsoleWrite(sender.Handle + " is loading a map.");
+                            LoadLevel(args[1]);
+                            /*if (LoadLevel(args[1]))
+                                Console.WriteLine("Loaded level " + args[1]);
+                            else
+                                Console.WriteLine("Level file not found!");*/
+                        }
+                        else if (levelToLoad != "")
+                        {
+                            LoadLevel(levelToLoad);
+                        }
+                    }
+                    break;
+                default: //Check / set var
+                    {
+                        string name = args[0];
+                        int exists = varExists(name);
+                        if (exists > 0)
+                        {
+                            if (args.Length == 2)
+                            {
+                                try
+                                {
+                                    if (exists == 1)
+                                    {
+                                        bool newVal = false;
+                                        newVal = bool.Parse(args[1]);
+                                        varSet(name, newVal);
+                                    }
+                                    else if (exists == 2)
+                                    {
+                                        varSet(name, args[1]);
+                                    }
+                                    else if (exists == 3)
+                                    {
+                                        varSet(name, Int32.Parse(args[1]));
+                                    }
+
+                                }
+                                catch { }
+                            }
+                            else
+                            {
+                                if (sender==null)
+                                    varReportStatus(name);
+                                else
+                                    SendServerMessageToPlayer(sender.Handle + ": The " + args[0].ToLower() + " command is only for use in the server console.",sender.NetConn);
+                            }
+                        }
+                        else
+                        {
+                            char first = args[0].ToCharArray()[0];
+                            if (first == 'y' || first == 'Y')
+                            {
+                                string message = "SERVER: " + args[0].Substring(1);
+                                if (args.Length > 1)
+                                    message += (message != "SERVER: " ? " " : "") + args[1];
+                                SendServerMessage(message);
+                            }
+                            else
+                            {
+                                if (sender == null)
+                                    ConsoleWrite("Unknown command/var.");
+                                return false;
+                            }
+                        }
+                    }
+                    break;
             }
-            else
-            {
-                //Enforce a server update sooner
-                //lastServerListUpdate.AddMinutes(1);
-            }*/
+            return true;
         }
 
         public void MessageAll(string text)
@@ -513,6 +787,59 @@ namespace Infiniminer
             if (consoleText.Count > CONSOLE_SIZE)
                 consoleText.RemoveAt(0);
             ConsoleRedraw();
+        }
+
+        public Dictionary<string, short> LoadAdminList()
+        {
+            Dictionary<string, short> temp = new Dictionary<string, short>();
+
+            try
+            {
+                if (!File.Exists("admins.txt"))
+                {
+                    FileStream fs = File.Create("admins.txt");
+                    StreamWriter sr = new StreamWriter(fs);
+                    sr.WriteLine("#A list of all admins - just add one ip per line");
+                    sr.Close();
+                    fs.Close();
+                }
+                else
+                {
+                    FileStream file = new FileStream("admins.txt", FileMode.Open, FileAccess.Read);
+                    StreamReader sr = new StreamReader(file);
+                    string line = sr.ReadLine();
+                    while (line != null)
+                    {
+                        if (line.Trim().Length!=0&&line.Trim().ToCharArray()[0]!='#')
+                            temp.Add(line.Trim(), (short)2); //This will be changed to note authority too
+                        line = sr.ReadLine();
+                    }
+                    sr.Close();
+                    file.Close();
+                }
+            }
+            catch {
+                ConsoleWrite("Unable to load admin list.");
+            }
+
+            return temp;
+        }
+
+        public bool SaveAdminList()
+        {
+            try
+            {
+                FileStream file = new FileStream("admins.txt", FileMode.Create, FileAccess.Write);
+                StreamWriter sw = new StreamWriter(file);
+                sw.WriteLine("#A list of all admins - just add one ip per line\n");
+                foreach (string ip in banList)
+                    sw.WriteLine(ip);
+                sw.Close();
+                file.Close();
+                return true;
+            }
+            catch { }
+            return false;
         }
 
         public List<string> LoadBanList()
@@ -561,7 +888,7 @@ namespace Infiniminer
             List<Player> playersToKick = new List<Player>();
             foreach (Player p in playerList.Values)
             {
-                if ((p.IP == ip&&!name)||(p.Handle == ip&&name))
+                if ((p.IP == ip && !name) || (p.Handle.ToLower().Contains(ip.ToLower()) && name))
                     playersToKick.Add(p);
             }
             foreach (Player p in playersToKick)
@@ -583,26 +910,59 @@ namespace Infiniminer
             {
                 foreach (Player p in playerList.Values)
                 {
-                    if (p.Handle == ip)
+                    if ((p.Handle == ip && !name) || (p.Handle.ToLower().Contains(ip.ToLower()) && name))
                     {
                         realIp = p.IP;
                         break;
                     }
                 }
             }
-            if (!banList.Contains(ip))
+            if (!banList.Contains(realIp))
             {
-                banList.Add(ip);
+                banList.Add(realIp);
                 SaveBanList(banList);
+            }
+        }
+
+        public void AdminPlayer(string ip)
+        {
+            AdminPlayer(ip, false,(short)2);
+        }
+
+        public void AdminPlayer(string ip, bool name)
+        {
+            AdminPlayer(ip, name, (short)2);
+        }
+
+        public void AdminPlayer(string ip, bool name, short authority)
+        {
+            string realIp = ip;
+            if (name)
+            {
+                foreach (Player p in playerList.Values)
+                {
+                    if ((p.Handle == ip && !name) || (p.Handle.ToLower().Contains(ip.ToLower()) && name))
+                    {
+                        realIp = p.IP;
+                        break;
+                    }
+                }
+            }
+            if (admins.ContainsKey(realIp))
+            {
+                admins.Add(realIp,authority);
+                SaveAdminList();
             }
         }
 
         public void ConsoleProcessInput()
         {
-            string[] args = consoleInput.Split(" ".ToCharArray(),2);
-
             ConsoleWrite("> " + consoleInput);
+            
+            ProcessCommand(consoleInput, (short)2, null);
+            /*string[] args = consoleInput.Split(" ".ToCharArray(),2);
 
+            
             switch (args[0].ToLower().Trim())
             {
                 case "help":
@@ -627,20 +987,6 @@ namespace Infiniminer
                         ConsoleWrite(" quit");
                     }
                     break;
-                /*case "test":
-                    GetExplosionPattern(args.Length >=2 ? Int32.Parse(args[1]) : 0);//ConsoleWrite(GetExplosionPattern());
-                    break;*/
-                case "announce":
-                    {
-                        PublicServerListUpdate(true);
-                        //ConsoleWrite("Updating public server list...");
-                    }
-                    break;
-                /*case "threads":
-                    {
-                        ConsoleWrite("Currently " + mapSendingProgress.Count + " map sending threads active.");
-                    }
-                    break;*/
                 case "players":
                     {
                         ConsoleWrite("( " + playerList.Count + " / " + varGetI("maxplayers") + " )");//maxPlayers + " )");
@@ -656,7 +1002,14 @@ namespace Infiniminer
                         }
                     }
                     break;
-
+                case "listvars":
+                    varList(true);
+                    break;
+                case "announce":
+                    {
+                        PublicServerListUpdate(true);
+                    }
+                    break;
                 case "kick":
                     {
                         if (args.Length == 2)
@@ -692,10 +1045,6 @@ namespace Infiniminer
                             BanPlayer(args[1],true);
                         }
                     }
-                    break;
-
-                case "listvars":
-                    varList(true);
                     break;
 
                 case "toggle":
@@ -734,8 +1083,6 @@ namespace Infiniminer
                         if (args.Length == 2)
                         {
                             string message = "SERVER: " + args[1];
-                            //for (int i = 1; i < args.Length; i++)
-                            //    message += args[i] + " ";
                             SendServerMessage(message);
                         }
                     }
@@ -755,10 +1102,6 @@ namespace Infiniminer
                         if (args.Length >= 2)
                         {
                             LoadLevel(args[1]);
-                            /*if (LoadLevel(args[1]))
-                                Console.WriteLine("Loaded level " + args[1]);
-                            else
-                                Console.WriteLine("Level file not found!");*/
                         }
                         else if (levelToLoad != "")
                         {
@@ -766,11 +1109,6 @@ namespace Infiniminer
                         }
                     }
                     break;
-                /*case "reload":
-                    disconnectAll();
-                    ConsoleWrite("CALCULATING INITIAL LAVA FLOWS");
-                    ConsoleWrite("TOTAL LAVA BLOCKS = " + newMap());
-                    break;*/
                 case "status":
                     status();
                     break;
@@ -822,7 +1160,7 @@ namespace Infiniminer
                         }
                     }
                     break;
-            }
+            }*/
 
             consoleInput = "";
             ConsoleRedraw();
@@ -1002,9 +1340,8 @@ namespace Infiniminer
         public string GetExplosionPattern(int n)
         {
             string output="";
-            int radius = (int)Math.Ceiling((double)varGetI("explosionradius"));//tntExplosionRadius);
+            int radius = (int)Math.Ceiling((double)varGetI("explosionradius"));
             int size = radius * 2 + 1;
-            //tntExplosionPattern = new bool[size, size, size];
             int center = radius; //Not adding one because arrays start from 0
             for (int z = n; z==n&&z<size; z++)
             {
@@ -1018,16 +1355,15 @@ namespace Infiniminer
                         output1+=tntExplosionPattern[x, y, z] ? "1, " : "0, ";
                     }
                     ConsoleWrite(output1);
-                    //output += "\n";
                 }
                 output += "\n";
             }
-            return "";// output;
+            return "";
         }
 
         public void CalculateExplosionPattern()
         {
-            int radius = (int)Math.Ceiling((double)varGetI("explosionradius"));//tntExplosionRadius);
+            int radius = (int)Math.Ceiling((double)varGetI("explosionradius"));
             int size = radius * 2 + 1;
             tntExplosionPattern = new bool[size, size, size];
             int center = radius; //Not adding one because arrays start from 0
@@ -1040,7 +1376,7 @@ namespace Infiniminer
                         else
                         {
                             double distance = Get3DDistance(center, center, center, x, y, z);//Use center of blocks
-                            if (distance <= (double)varGetI("explosionradius"))//tntExplosionRadius)
+                            if (distance <= (double)varGetI("explosionradius"))
                                 tntExplosionPattern[x, y, z] = true;
                             else
                                 tntExplosionPattern[x, y, z] = false;
@@ -1051,7 +1387,7 @@ namespace Infiniminer
         public void status()
         {
             ConsoleWrite(varGetS("name"));//serverName);
-            ConsoleWrite(playerList.Count + " / " + varGetI("maxplayers") + " players");//maxPlayers + " players");
+            ConsoleWrite(playerList.Count + " / " + varGetI("maxplayers") + " players");
             foreach (string name in varBoolBindings.Keys)
             {
                 ConsoleWrite(name + " = " + varBoolBindings[name]);
@@ -1076,23 +1412,23 @@ namespace Infiniminer
             if (dataFile.Data.ContainsKey("maxplayers"))
                 tmpMaxPlayers = (int)Math.Min(32, uint.Parse(dataFile.Data["maxplayers"], System.Globalization.CultureInfo.InvariantCulture));
             if (dataFile.Data.ContainsKey("public"))
-                varSet("public", bool.Parse(dataFile.Data["public"]), true);// publicServer = bool.Parse(dataFile.Data["public"]);
+                varSet("public", bool.Parse(dataFile.Data["public"]), true);
             if (dataFile.Data.ContainsKey("servername"))
-                varSet("name", dataFile.Data["servername"], true);// serverName = dataFile.Data["servername"];
+                varSet("name", dataFile.Data["servername"], true);
             if (dataFile.Data.ContainsKey("sandbox"))
-                varSet("sandbox", bool.Parse(dataFile.Data["sandbox"]), true);// sandboxMode = bool.Parse(dataFile.Data["sandbox"]);
+                varSet("sandbox", bool.Parse(dataFile.Data["sandbox"]), true);
             if (dataFile.Data.ContainsKey("notnt"))
-                varSet("tnt", !bool.Parse(dataFile.Data["notnt"]), true);// noTnt = bool.Parse(dataFile.Data["notnt"]);
+                varSet("tnt", !bool.Parse(dataFile.Data["notnt"]), true);
             if (dataFile.Data.ContainsKey("sphericaltnt"))
-                varSet("stnt", bool.Parse(dataFile.Data["sphericaltnt"]), true);// sphericalTnt = bool.Parse(dataFile.Data["sphericaltnt"]);
+                varSet("stnt", bool.Parse(dataFile.Data["sphericaltnt"]), true);
             if (dataFile.Data.ContainsKey("insanelava"))
-                varSet("insanelava", bool.Parse(dataFile.Data["insanelava"]), true);// insaneLava = bool.Parse(dataFile.Data["insanelava"]);
+                varSet("insanelava", bool.Parse(dataFile.Data["insanelava"]), true);
             if (dataFile.Data.ContainsKey("shockspreadslava"))
-                varSet("sspreads", bool.Parse(dataFile.Data["shockspreadslava"]), true);// shockSpreadsLava = bool.Parse(dataFile.Data["shockspreadslava"]);
+                varSet("sspreads", bool.Parse(dataFile.Data["shockspreadslava"]), true);
             if (dataFile.Data.ContainsKey("roadabsorbs"))
                 varSet("roadabsorbs", bool.Parse(dataFile.Data["roadabsorbs"]), true);
             if (dataFile.Data.ContainsKey("minelava"))
-                varSet("minelava", bool.Parse(dataFile.Data["minelava"]), true);// mineLava = bool.Parse(dataFile.Data["minelava"]);
+                varSet("minelava", bool.Parse(dataFile.Data["minelava"]), true);
             if (dataFile.Data.ContainsKey("levelname"))
                 levelToLoad = dataFile.Data["levelname"];
             if (dataFile.Data.ContainsKey("greeter"))
@@ -1105,14 +1441,15 @@ namespace Infiniminer
             // Load the ban-list.
             banList = LoadBanList();
 
-            //newMap();
+            // Load the admin-list
+            admins = LoadAdminList();
 
             if (tmpMaxPlayers>=0)
                 varSet("maxplayers", tmpMaxPlayers, true);
 
             // Initialize the server.
             NetConfiguration netConfig = new NetConfiguration("InfiniminerPlus");
-            netConfig.MaxConnections = (int)varGetI("maxplayers");//maxPlayers);
+            netConfig.MaxConnections = (int)varGetI("maxplayers");
             netConfig.Port = 5565;
             netServer = new InfiniminerNetServer(netConfig);
             netServer.SetMessageTypeEnabled(NetMessageType.ConnectionApproval, true);
@@ -1141,9 +1478,7 @@ namespace Infiniminer
             {
                 // Calculate initial lava flows.
                 ConsoleWrite("CALCULATING INITIAL LAVA FLOWS");
-                /*for (int i=0; i<MAPSIZE*2; i++)
-                    DoLavaStuff();*/
-                ConsoleWrite("TOTAL LAVA BLOCKS = " + newMap());//lavaBlockCount);
+                ConsoleWrite("TOTAL LAVA BLOCKS = " + newMap());
             }
             
 
@@ -1191,8 +1526,10 @@ namespace Infiniminer
                                 }*/
                                     else
                                     {
+                                        if (admins.ContainsKey(newPlayer.IP))
+                                            newPlayer.admin = admins[newPlayer.IP];
                                         playerList[msgSender] = newPlayer;
-                                        greeted[msgSender] = false;
+                                        toGreet.Add(msgSender);
                                         this.netServer.SanityCheck(msgSender);
                                         msgSender.Approve();
                                         PublicServerListUpdate(true);
@@ -1244,28 +1581,31 @@ namespace Infiniminer
                                                 // Read the data from the packet.
                                                 ChatMessageType chatType = (ChatMessageType)msgBuffer.ReadByte();
                                                 string chatString = Defines.Sanitize(msgBuffer.ReadString());
-                                                ConsoleWrite("CHAT: (" + player.Handle + ") " + chatString);
-
-                                                // Append identifier information.
-                                                if (chatType == ChatMessageType.SayAll)
-                                                    chatString = player.Handle + " (ALL): " + chatString;
-                                                else
-                                                    chatString = player.Handle + " (TEAM): " + chatString;
-
-                                                // Construct the message packet.
-                                                NetBuffer chatPacket = netServer.CreateBuffer();
-                                                chatPacket.Write((byte)InfiniminerMessage.ChatMessage);
-                                                chatPacket.Write((byte)((player.Team == PlayerTeam.Red) ? ChatMessageType.SayRedTeam : ChatMessageType.SayBlueTeam));
-                                                chatPacket.Write(chatString);
-
-                                                // Send the packet to people who should recieve it.
-                                                foreach (Player p in playerList.Values)
+                                                if (!ProcessCommand(chatString,playerList[msgSender].admin,playerList[msgSender]))
                                                 {
-                                                    if (chatType == ChatMessageType.SayAll ||
-                                                        chatType == ChatMessageType.SayBlueTeam && p.Team == PlayerTeam.Blue ||
-                                                        chatType == ChatMessageType.SayRedTeam && p.Team == PlayerTeam.Red)
-                                                        if (p.NetConn.Status == NetConnectionStatus.Connected)
-                                                            netServer.SendMessage(chatPacket, p.NetConn, NetChannel.ReliableInOrder3);
+                                                    ConsoleWrite("CHAT: (" + player.Handle + ") " + chatString);
+
+                                                    // Append identifier information.
+                                                    if (chatType == ChatMessageType.SayAll)
+                                                        chatString = player.Handle + " (ALL): " + chatString;
+                                                    else
+                                                        chatString = player.Handle + " (TEAM): " + chatString;
+
+                                                    // Construct the message packet.
+                                                    NetBuffer chatPacket = netServer.CreateBuffer();
+                                                    chatPacket.Write((byte)InfiniminerMessage.ChatMessage);
+                                                    chatPacket.Write((byte)((player.Team == PlayerTeam.Red) ? ChatMessageType.SayRedTeam : ChatMessageType.SayBlueTeam));
+                                                    chatPacket.Write(chatString);
+
+                                                    // Send the packet to people who should recieve it.
+                                                    foreach (Player p in playerList.Values)
+                                                    {
+                                                        if (chatType == ChatMessageType.SayAll ||
+                                                            chatType == ChatMessageType.SayBlueTeam && p.Team == PlayerTeam.Blue ||
+                                                            chatType == ChatMessageType.SayRedTeam && p.Team == PlayerTeam.Red)
+                                                            if (p.NetConn.Status == NetConnectionStatus.Connected)
+                                                                netServer.SendMessage(chatPacket, p.NetConn, NetChannel.ReliableInOrder3);
+                                                    }
                                                 }
                                             }
                                             break;
@@ -1360,7 +1700,7 @@ namespace Infiniminer
 
                                         case InfiniminerMessage.PlayerAlive:
                                             {
-                                                if (!greeted.ContainsKey(msgSender)||!greeted[msgSender])
+                                                if (toGreet.Contains(msgSender))
                                                 {
                                                     string greeting = varGetS("greeter");
                                                     greeting = greeting.Replace("[name]", playerList[msgSender].Handle);
@@ -1372,7 +1712,7 @@ namespace Infiniminer
                                                         greetBuffer.Write(Defines.Sanitize(greeting));
                                                         netServer.SendMessage(greetBuffer, msgSender, NetChannel.ReliableInOrder3);
                                                     }
-                                                    greeted[msgSender] = true;
+                                                    toGreet.Remove(msgSender);
                                                 }
                                                 ConsoleWrite("PLAYER_ALIVE: " + player.Handle);
                                                 player.Ore = 0;
@@ -1439,9 +1779,7 @@ namespace Infiniminer
                 }
 
                 // Time to send a new server update?
-                //TimeSpan updateTimeSpan = DateTime.Now - lastServerListUpdate;
-                //if (updateTimeSpan.TotalMinutes > 2)
-                    PublicServerListUpdate(); //It checks for public server / time span
+                PublicServerListUpdate(); //It checks for public server / time span
 
                 //Time to terminate finished map sending threads?
                 TerminateFinishedThreads();
@@ -1510,7 +1848,7 @@ namespace Infiniminer
                     DepositCash(p);
             }
 
-            if (varGetB("sandbox"))//sandboxMode)
+            if (varGetB("sandbox"))
                 return;
             if (teamCashBlue >= winningCashAmount && winningTeam == PlayerTeam.None)
                 winningTeam = PlayerTeam.Blue;
@@ -1586,7 +1924,7 @@ namespace Infiniminer
                                     flowSleep[i, j - 1, k] = true;
                                 }
                             }
-                            else if (typeBelow != BlockType.Lava || varGetB("insanelava"))//insaneLava)
+                            else if (typeBelow != BlockType.Lava || varGetB("insanelava"))
                             {
                                 if (i > 0 && blockList[i-1, j, k] == BlockType.None)
                                 {
@@ -1751,7 +2089,7 @@ namespace Infiniminer
 
             // If the block is too expensive, bail.
             uint blockCost = BlockInformation.GetCost(blockType);
-            if (varGetB("sandbox") && blockCost <= player.OreMax)// sandboxMode && blockCost <= player.OreMax)
+            if (varGetB("sandbox") && blockCost <= player.OreMax)
                 blockCost = 0;
             if (blockCost > player.Ore)
                 actionFailed = true;
@@ -1907,7 +2245,7 @@ namespace Infiniminer
                 p.ExplosiveList.Remove(new Vector3(x, y, z));
 
             // Detonate the block.
-            if (!varGetB("stnt"))//!sphericalTnt)
+            if (!varGetB("stnt"))
             {
                 for (int dx = -2; dx <= 2; dx++)
                     for (int dy = -2; dy <= 2; dy++)
@@ -1948,7 +2286,7 @@ namespace Infiniminer
             }
             else
             {
-                int radius = (int)Math.Ceiling((double)varGetI("explosionradius"));//tntExplosionRadius);
+                int radius = (int)Math.Ceiling((double)varGetI("explosionradius"));
                 int size = radius * 2 + 1;
                 int center = radius+1;
                 //ConsoleWrite("Radius: " + radius + ", Size: " + size + ", Center: " + center);
@@ -2006,10 +2344,10 @@ namespace Infiniminer
 
                 if (blockList[x, y, z] != BlockType.Explosive)
                     player.ExplosiveList.RemoveAt(0);
-                else if (!varGetB("tnt"))//noTnt)
+                else if (!varGetB("tnt"))
                 {
                     player.ExplosiveList.RemoveAt(0);
-                    //ExplosionEffectAtPoint(x,y,z);
+                    ExplosionEffectAtPoint(x,y,z);
                     // Remove the block that is detonating.
                     SetBlock(x, y, z, BlockType.None, PlayerTeam.None);
                 }
@@ -2051,7 +2389,7 @@ namespace Infiniminer
 
             player.Score += player.Cash;
 
-            if (!varGetB("sandbox"))//sandboxMode)
+            if (!varGetB("sandbox"))
             {
                 if (player.Team == PlayerTeam.Red)
                     teamCashRed += player.Cash;
@@ -2080,6 +2418,20 @@ namespace Infiniminer
                     return "BLUE";
             }
             return "";
+        }
+
+        public void SendServerMessageToPlayer(string message, NetConnection conn)
+        {
+            if (conn.Status == NetConnectionStatus.Connected)
+            {
+                NetBuffer msgBuffer = netServer.CreateBuffer();
+                msgBuffer = netServer.CreateBuffer();
+                msgBuffer.Write((byte)InfiniminerMessage.ChatMessage);
+                msgBuffer.Write((byte)ChatMessageType.SayAll);
+                msgBuffer.Write(Defines.Sanitize(message));
+
+                netServer.SendMessage(msgBuffer, conn, NetChannel.ReliableInOrder3);
+            }
         }
 
         public void SendServerMessage(string message)
@@ -2368,10 +2720,10 @@ namespace Infiniminer
             if (!updated)
             {
                 Dictionary<string, string> postDict = new Dictionary<string, string>();
-                postDict["name"] = varGetS("name");//serverName;
+                postDict["name"] = varGetS("name");
                 postDict["game"] = "INFINIMINER";
                 postDict["player_count"] = "" + playerList.Keys.Count;
-                postDict["player_capacity"] = "" + varGetI("maxplayers");//maxPlayers;
+                postDict["player_capacity"] = "" + varGetI("maxplayers");
                 postDict["extra"] = GetExtraInfo();
 
                 lastServerListUpdate = DateTime.Now;
