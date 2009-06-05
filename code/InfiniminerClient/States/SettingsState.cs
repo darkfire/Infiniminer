@@ -33,6 +33,7 @@ namespace Infiniminer.States
         ClickRegion[] clkMenuSettings = new ClickRegion[2] {
             new ClickRegion(new Rectangle(0,713,255,42),"cancel"),
             new ClickRegion(new Rectangle(524,713,500,42),"accept")
+            //new ClickRegion(new Rectangle(0,0,0,0),"keylayout")
         };
 
         protected string nextState = null;
@@ -73,7 +74,7 @@ namespace Infiniminer.States
             temp.maxVal=maxVal;
             temp.setValue(initVal);
             temp.integers=integerOnly;
-            elements.Add(temp);//sliders.Add(temp);
+            elements.Add(temp);
         }
 
         public void addButtonAutomatic(string text, string onText, string offText, bool clicked)
@@ -95,7 +96,7 @@ namespace Infiniminer.States
             temp.onText = onText;
             temp.offText = offText;
             temp.clicked = clicked;
-            elements.Add(temp); //buttons.Add(temp);
+            elements.Add(temp);
         }
 
         public void addTextInputAutomatic(string text, string initVal)
@@ -178,30 +179,17 @@ namespace Infiniminer.States
             addSpace(16);
 
             
-            _P.KillPlayer("");
+            //_P.KillPlayer("");
         }
 
         public override void OnLeave(string newState)
         {
             base.OnLeave(newState);
-            //Retrieve variables
-            foreach (InterfaceElement element in elements)
-            {
-
-            }
         }
 
         public override void OnMouseDown(MouseButton button, int x, int y)
         {
             base.OnMouseDown(button, x, y);
-            /*foreach(InterfaceSlider slider in sliders)
-            {
-                slider.OnMouseDown(button, x, y);
-            }
-            foreach (InterfaceButtonToggle buttonI in buttons)
-            {
-                buttonI.OnMouseDown(button, x, y);
-            }*/
             foreach (InterfaceElement element in elements)
             {
                 element.OnMouseDown(button, x, y);
@@ -215,20 +203,16 @@ namespace Infiniminer.States
                     if (saveData()>=1)
                         _SM.Exit();
                     break;
+                /*case "keylayout":
+                    saveData();
+                    nextState = "Infiniminer.States.KeySettingsState";
+                    break;*/
             }
         }
 
         public override void OnMouseUp(MouseButton button, int x, int y)
         {
             base.OnMouseUp(button, x, y);
-            /*foreach (InterfaceSlider slider in sliders)
-            {
-                slider.OnMouseUp(button, x, y);
-            }
-            foreach (InterfaceButtonToggle buttonI in buttons)
-            {
-                buttonI.OnMouseUp(button, x, y);
-            }*/
             foreach (InterfaceElement element in elements)
             {
                 element.OnMouseUp(button, x, y);
@@ -268,38 +252,20 @@ namespace Infiniminer.States
             return dw.WriteChanges("client.config.txt");
         }
 
-        /*
-            addTextInputAutomatic("Scrn  Width", "1024");
-            addTextInputAutomatic("Scrn Height", "780");
-            addButtonAutomatic("Screen Mode", "Fullscreen", "Windowed", false);
-            addSpace(16);
-
-            addLabelAutomatic("Sound Settings");
-            addSliderAutomatic("Volume", 1f, 100f, 100f, true);
-            addButtonAutomatic("Enable Sound", "On", "NoSound", true);
-            addSpace(16);
-
-            shiftColumn();
-
-            addLabelAutomatic("Mouse Settings");
-            addButtonAutomatic("Invert Mouse", "Yes", "No", false);
-            addSliderAutomatic("Mouse Sensitivity", 1f, 10f, 5f, true);
-            addSpace(16);
-
-            addLabelAutomatic("Misc Settings");
-            addButtonAutomatic("Bloom", "Pretty", "Boring", true);
-            addButtonAutomatic("Show FPS", "Yes", "No", true);
-            addSpace(16);
-        */
+        public override void OnCharEntered(EventInput.CharacterEventArgs e)
+        {
+            base.OnCharEntered(e);
+            foreach (InterfaceElement element in elements)
+            {
+                element.OnCharEntered(e);
+            }
+        }
 
         public override void OnKeyDown(Keys key)
         {
             base.OnKeyDown(key);
             if (key == Keys.Escape)
-            {
-                //saveData();
                 nextState = "Infiniminer.States.ServerBrowserState";
-            }
             else
             {
                 foreach (InterfaceElement element in elements)
@@ -329,14 +295,6 @@ namespace Infiniminer.States
             spriteBatch.Begin(SpriteBlendMode.AlphaBlend, SpriteSortMode.Deferred, SaveStateMode.SaveState);
             spriteBatch.Draw(texSettings, drawRect, Color.White);
             spriteBatch.End();
-            /*foreach (InterfaceSlider slider in sliders)
-            {
-                slider.Render(graphicsDevice);
-            }
-            foreach (InterfaceButtonToggle button in buttons)
-            {
-                button.Render(graphicsDevice);
-            }*/
             foreach (InterfaceElement element in elements)
             {
                 element.Render(graphicsDevice);

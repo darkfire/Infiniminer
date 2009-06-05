@@ -26,7 +26,7 @@ namespace Infiniminer.States
         SpriteFont uiFont;
         bool directConnectIPEnter = false;
         string directConnectIP = "";
-        KeyMap keyMap;
+        //KeyMap keyMap;
 
         ClickRegion[] clkMenuServer = new ClickRegion[3] {
             new ClickRegion(new Rectangle(0,713,425,42), "direct"),
@@ -48,7 +48,7 @@ namespace Infiniminer.States
                                      1024);
 
             uiFont = _SM.Content.Load<SpriteFont>("font_04b08");
-            keyMap = new KeyMap();
+            //keyMap = new KeyMap();
             
             serverList = (_SM as InfiniminerGame).EnumerateServers(0.5f);
         }
@@ -87,12 +87,24 @@ namespace Infiniminer.States
                 }
             }
 
-            spriteBatch.DrawString(uiFont, InfiniminerGame.INFINIMINER_VERSION, new Vector2(10, _SM.GraphicsDevice.Viewport.Height - 20), Color.White);
+            spriteBatch.DrawString(uiFont, Defines.INFINIMINER_VERSION, new Vector2(10, _SM.GraphicsDevice.Viewport.Height - 20), Color.White);
 
             if (directConnectIPEnter)
                 spriteBatch.DrawString(uiFont, "ENTER IP: " + directConnectIP, new Vector2(drawRect.X + 30, drawRect.Y + 690), Color.White);
 
             spriteBatch.End();
+        }
+
+        public override void OnCharEntered(EventInput.CharacterEventArgs e)
+        {
+            if ((int)e.Character < 32 || (int)e.Character > 126) //From space to tilde
+                return; //Do nothing
+
+            //Only respond if entering an ip and control is not pressed
+            if (directConnectIPEnter && !(Keyboard.GetState().IsKeyDown(Keys.LeftControl) || Keyboard.GetState().IsKeyDown(Keys.RightControl)))
+            {
+                directConnectIP += e.Character;
+            }
         }
 
         public override void OnKeyDown(Keys key)
@@ -151,10 +163,10 @@ namespace Infiniminer.States
                     }
                     catch { }
                 }
-                else if (keyMap.IsKeyMapped(key))
+                /*else if (keyMap.IsKeyMapped(key))
                 {
                     directConnectIP += keyMap.TranslateKey(key, false);
-                }
+                }*/
             }
             else
             {

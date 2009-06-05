@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.IO;
-//using System.Windows.Forms;
 using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
@@ -32,8 +31,6 @@ namespace Infiniminer
         public bool NoSound = false;
         public float mouseSensitivity = 0.005f;
 
-        //public Dictionary<Buttons, Keys> keyBinds = new Dictionary<Buttons, Keys>();
-        //public Dictionary<Buttons, MouseButton> mouseBinds = new Dictionary<Buttons, MouseButton>();
         public KeyBindHandler keyBinds = new KeyBindHandler();
 
         public bool anyPacketsReceived = false;
@@ -432,7 +429,7 @@ namespace Infiniminer
             BlockType upperBlock = propertyBag.blockEngine.BlockAtPoint(movePosition);
             if (upperBlock == BlockType.Lava || lowerBlock == BlockType.Lava || midBlock == BlockType.Lava)
             {
-                propertyBag.KillPlayer(Defines.deathByLava);//"HAD AN UNFORTUNATE SMELTING ACCIDENT");////"WAS INCINERATED BY LAVA!");
+                propertyBag.KillPlayer(Defines.deathByLava);
             }
         }
 

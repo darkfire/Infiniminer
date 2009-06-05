@@ -497,20 +497,25 @@ namespace Infiniminer
 
         public void SetPlayerClass(PlayerClass playerClass)
         {
-            if (netClient.Status != NetConnectionStatus.Connected)
-                return;
+            if (this.playerClass != playerClass)
+            {
+                if (netClient.Status != NetConnectionStatus.Connected)
+                    return;
 
-            this.playerClass = playerClass;
+                this.playerClass = playerClass;
 
-            NetBuffer msgBuffer = netClient.CreateBuffer();
-            msgBuffer.Write((byte)InfiniminerMessage.SelectClass);
-            msgBuffer.Write((byte)playerClass);
-            netClient.SendMessage(msgBuffer, NetChannel.ReliableUnordered);
+                NetBuffer msgBuffer = netClient.CreateBuffer();
+                msgBuffer.Write((byte)InfiniminerMessage.SelectClass);
+                msgBuffer.Write((byte)playerClass);
+                netClient.SendMessage(msgBuffer, NetChannel.ReliableUnordered);
 
-            playerToolSelected = 0;
-            playerBlockSelected = 0;
+                playerToolSelected = 0;
+                playerBlockSelected = 0;
 
-            equipWeps();
+                equipWeps();
+            }
+            this.KillPlayer("");
+            this.RespawnPlayer();
         }
 
         public void FireRadar()

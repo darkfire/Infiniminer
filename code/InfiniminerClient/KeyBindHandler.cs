@@ -7,6 +7,7 @@ namespace Infiniminer
 {
     public class KeyBindHandler
     {
+        //Cases where there are multiple keys under the same name
         enum SpecialKeys
         {
             Control,
@@ -28,6 +29,63 @@ namespace Infiniminer
                 return true;
             else if ((theKey == Keys.LeftControl || theKey == Keys.RightControl) && specialKeyBinds.ContainsKey(SpecialKeys.Control) && specialKeyBinds[SpecialKeys.Control] == button)
                 return true;
+            return false;
+        }
+
+        public bool IsPressed(Buttons button)
+        {
+            KeyboardState state = Keyboard.GetState();
+            foreach (Keys key in keyBinds.Keys)
+            {
+                if (keyBinds[key] == button)
+                {
+                    if (state.IsKeyDown(key))
+                        return true;
+                }
+            }
+            MouseState ms = Mouse.GetState();
+            foreach (MouseButton mb in mouseBinds.Keys)
+            {
+                if (mouseBinds[mb] == button)
+                {
+                    switch (mb)
+                    {
+                        case MouseButton.LeftButton:
+                            if (ms.LeftButton == ButtonState.Pressed)
+                                return true;
+                            break;
+                        case MouseButton.MiddleButton:
+                            if (ms.MiddleButton == ButtonState.Pressed)
+                                return true;
+                            break;
+                        case MouseButton.RightButton:
+                            if (ms.RightButton == ButtonState.Pressed)
+                                return true;
+                            break;
+                    }
+                }
+            }
+            foreach (SpecialKeys key in specialKeyBinds.Keys)
+            {
+                if (specialKeyBinds[key] == button)
+                {
+                    switch (key)
+                    {
+                        case SpecialKeys.Alt:
+                            if (state.IsKeyDown(Keys.LeftAlt) || state.IsKeyDown(Keys.RightAlt))
+                                return true;
+                            break;
+                        case SpecialKeys.Control:
+                            if (state.IsKeyDown(Keys.LeftControl) || state.IsKeyDown(Keys.RightControl))
+                                return true;
+                            break;
+                        case SpecialKeys.Shift:
+                            if (state.IsKeyDown(Keys.LeftShift) || state.IsKeyDown(Keys.RightShift))
+                                return true;
+                            break;
+                    }
+                }
+            }
             return false;
         }
 
@@ -103,6 +161,7 @@ namespace Infiniminer
         }
 
         //Note that multiple binds to the same key won't work right now due to the way DatafileWriter handles input and how Dictionary works
+        //Macro support is a future goal
         public void SaveBinds(DatafileWriter output, string filename)
         {
             foreach (Keys key in keyBinds.Keys)

@@ -124,22 +124,6 @@ namespace StateMasher
                 if (newState != null)
                     ChangeState(newState);
 
-                // Check for keyboard events.
-                /*KeyboardState keyState = Keyboard.GetState();
-                Dictionary<Keys, bool> keysDownNow = new Dictionary<Keys, bool>();
-                foreach (Keys k in keyState.GetPressedKeys())
-                    keysDownNow.Add(k, true);
-                if (WindowHasFocus())
-                {
-                    foreach (Keys k in keysDownNow.Keys)
-                        if (!keysDown.ContainsKey(k))
-                            currentState.OnKeyDown(k);
-                    foreach (Keys k in keysDown.Keys)
-                        if (!keysDownNow.ContainsKey(k))
-                            currentState.OnKeyUp(k);
-                }
-                keysDown = keysDownNow;*/
-
                 // Check for mouse events.
                 MouseState msNew = Mouse.GetState();
                 if (WindowHasFocus())

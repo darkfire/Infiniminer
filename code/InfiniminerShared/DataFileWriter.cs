@@ -54,6 +54,11 @@ namespace Infiniminer
         {
             try
             {
+                if (!File.Exists(filename))
+                {
+                    FileStream temp = File.Create(filename);
+                    temp.Close();
+                }
                 Dictionary<string, bool>seen = new Dictionary<string, bool>();
 
                 FileStream file = new FileStream(filename, FileMode.Open, FileAccess.Read);

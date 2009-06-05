@@ -27,13 +27,10 @@ namespace Infiniminer.States
 
         string nextState = null;
         bool mouseInitialized = false;
-        //KeyMap keyMap;
 
         public override void OnEnter(string oldState)
         {
             _SM.IsMouseVisible = false;
-
-            //keyMap = new KeyMap();
         }
 
         public override void OnLeave(string newState)
@@ -75,8 +72,8 @@ namespace Infiniminer.States
                     if ((_SM as InfiniminerGame).InvertMouseYAxis)
                         dy = -dy;
 
-                    _P.playerCamera.Yaw -= dx * _P.mouseSensitivity;//0.005f;
-                    _P.playerCamera.Pitch = (float)Math.Min(Math.PI * 0.49, Math.Max(-Math.PI * 0.49, _P.playerCamera.Pitch - dy * _P.mouseSensitivity));//0.005f));
+                    _P.playerCamera.Yaw -= dx * _P.mouseSensitivity;
+                    _P.playerCamera.Pitch = (float)Math.Min(Math.PI * 0.49, Math.Max(-Math.PI * 0.49, _P.playerCamera.Pitch - dy * _P.mouseSensitivity));
                 }
                 else
                 {
@@ -92,10 +89,6 @@ namespace Infiniminer.States
             {
                 _P.FirePickaxe();
                 _P.playerToolCooldown = _P.GetToolCooldown(PlayerTools.Pickaxe) * (_P.playerClass == PlayerClass.Miner ? 0.4f : 1.0f);
-                /*if (_P.playerClass == PlayerClass.Miner)
-                    _P.playerToolCooldown = _P.GetToolCooldown(PlayerTools.Pickaxe) * 0.4f;
-                else
-                    _P.playerToolCooldown = _P.GetToolCooldown(PlayerTools.Pickaxe);*/
             }
 
             // Prospector radar stuff.
@@ -116,7 +109,7 @@ namespace Infiniminer.States
             if (!_P.playerDead)
                 UpdatePlayerPosition(gameTime, keyState);
 
-            // Update the camera regardless of if we"re alive or not.
+            // Update the camera regardless of if we're alive or not.
             _P.UpdateCamera(gameTime);
 
             return nextState;
@@ -149,7 +142,7 @@ namespace Infiniminer.States
                     }
                     else if (fallDamage > 0.5)
                     {
-                        // Fall damage of 0.5 maps to a screenEffectCounter value of 2, meaning that the effect doesn"t appear.
+                        // Fall damage of 0.5 maps to a screenEffectCounter value of 2, meaning that the effect doesn't appear.
                         // Fall damage of 1.0 maps to a screenEffectCounter value of 0, making the effect very strong.
                         if (standingOnBlock != BlockType.Jump)
                         {
@@ -168,7 +161,7 @@ namespace Infiniminer.States
                 }
 
                 // If the player is stuck in the ground, bring them out.
-                // This happens because we"re standing on a block at -1.5, but stuck in it at -1.4, so -1.45 is the sweet spot.
+                // This happens because we're standing on a block at -1.5, but stuck in it at -1.4, so -1.45 is the sweet spot.
                 if (_P.blockEngine.SolidAtPointForPlayer(footPosition))
                 {
                     int blockOn = (int)(footPosition.Y);
@@ -189,20 +182,8 @@ namespace Infiniminer.States
                         movingOnRoad = true;
                         break;
 
-                    //case BlockType.Teleporter:
-                    //    if (!_P.playerDead)
-                    //    {
-                    //        _P.Teleport();
-                    //        _P.PlaySoundForEveryone(InfiniminerSound.Teleporter, _P.playerPosition);
-                    //    }
-                    //    break;
-
-                    //case BlockType.Shock:
-                    //    _P.KillPlayer("WAS ELECTROCUTED!");
-                    //    return;
-
                     case BlockType.Lava:
-                        _P.KillPlayer(Defines.deathByLava);//"WAS INCINERATED BY LAVA!");
+                        _P.KillPlayer(Defines.deathByLava);
                         return;
                 }
 
@@ -210,11 +191,11 @@ namespace Infiniminer.States
                 switch (hittingHeadOnBlock)
                 {
                     case BlockType.Shock:
-                        _P.KillPlayer(Defines.deathByElec);//"WAS ELECTROCUTED!");
+                        _P.KillPlayer(Defines.deathByElec);
                         return;
 
                     case BlockType.Lava:
-                        _P.KillPlayer(Defines.deathByLava);//"WAS INCINERATED BY LAVA!");
+                        _P.KillPlayer(Defines.deathByLava);
                         return;
                 }
             }
@@ -223,7 +204,7 @@ namespace Infiniminer.States
             // Death by falling off the map.
             if (_P.playerPosition.Y < -30)
             {
-                _P.KillPlayer(Defines.deathByMiss);//"WAS KILLED BY MISADVENTURE!");
+                _P.KillPlayer(Defines.deathByMiss);
                 return;
             }
 
@@ -232,17 +213,17 @@ namespace Infiniminer.States
 
             if (_P.chatMode == ChatMessageType.None)
             {
-                if (keyState.IsKeyDown(Keys.W))
+                if ((_SM as InfiniminerGame).keyBinds.IsPressed(Buttons.Forward))//keyState.IsKeyDown(Keys.W))
                     moveVector += _P.playerCamera.GetLookVector();
-                if (keyState.IsKeyDown(Keys.S))
+                if ((_SM as InfiniminerGame).keyBinds.IsPressed(Buttons.Backward))//keyState.IsKeyDown(Keys.S))
                     moveVector -= _P.playerCamera.GetLookVector();
-                if (keyState.IsKeyDown(Keys.D))
+                if ((_SM as InfiniminerGame).keyBinds.IsPressed(Buttons.Right))//keyState.IsKeyDown(Keys.D))
                     moveVector += _P.playerCamera.GetRightVector();
-                if (keyState.IsKeyDown(Keys.A))
+                if ((_SM as InfiniminerGame).keyBinds.IsPressed(Buttons.Left))//keyState.IsKeyDown(Keys.A))
                     moveVector -= _P.playerCamera.GetRightVector();
-                /*//Sprinting
-                if (keyState.IsKeyDown(Keys.LeftShift) || keyState.IsKeyDown(Keys.RightShift))
-                    sprinting = true;*/
+                //Sprinting
+                if ((_SM as InfiniminerGame).keyBinds.IsPressed(Buttons.Sprint))//keyState.IsKeyDown(Keys.LeftShift) || keyState.IsKeyDown(Keys.RightShift))
+                    sprinting = true;
             }
 
             if (moveVector.X != 0 || moveVector.Z != 0)
@@ -255,7 +236,7 @@ namespace Infiniminer.States
                     moveVector *= 2;
                 // Sprinting doubles speed, even if already on road
                 if (sprinting)
-                    moveVector *= 2;
+                    moveVector *= 1.5f;
 
                 // Attempt to move, doing collision stuff.
                 if (TryToMoveTo(moveVector, gameTime)) { }
@@ -283,32 +264,19 @@ namespace Infiniminer.States
                 return true;
             }
 
-            // It"s solid there, so while we can"t move we have officially collided with it.
+            // It's solid there, so while we can't move we have officially collided with it.
             BlockType lowerBlock = _P.blockEngine.BlockAtPoint(lowerBodyPoint);
             BlockType midBlock = _P.blockEngine.BlockAtPoint(midBodyPoint);
             BlockType upperBlock = _P.blockEngine.BlockAtPoint(movePosition);
 
-            //// It"s solid there, so see if it"s a spike block. If so, touching it will kill us!
-            //if (upperBlock == BlockType.Shock || lowerBlock == BlockType.Shock || midBlock == BlockType.Shock)
-            //{
-            //    _P.KillPlayer("WAS ELECTROCUTED!");
-            //    return true;
-            //}
-
-            // It"s solid there, so see if it"s a lava block. If so, touching it will kill us!
+            // It's solid there, so see if it's a lava block. If so, touching it will kill us!
             if (upperBlock == BlockType.Lava || lowerBlock == BlockType.Lava || midBlock == BlockType.Lava)
             {
-                _P.KillPlayer(Defines.deathByLava);//"WAS INCINERATED BY LAVA!");
+                _P.KillPlayer(Defines.deathByLava);
                 return true;
             }
 
-            //// If it"s our home block, deposit our money.
-            //if ((upperBlock == BlockType.HomeRed || lowerBlock == BlockType.HomeRed || midBlock == BlockType.HomeRed) && _P.playerTeam == PlayerTeam.Red)
-            //    _P.DepositLoot();
-            //if ((upperBlock == BlockType.HomeBlue || lowerBlock == BlockType.HomeBlue || midBlock == BlockType.HomeBlue) && _P.playerTeam == PlayerTeam.Blue)
-            //    _P.DepositLoot();
-
-            // If it"s a ladder, move up.
+            // If it's a ladder, move up.
             if (upperBlock == BlockType.Ladder || lowerBlock == BlockType.Ladder || midBlock == BlockType.Ladder)
             {
                 _P.playerVelocity.Y = CLIMBVELOCITY;
@@ -353,12 +321,6 @@ namespace Infiniminer.States
                         _P.chatEntryBuffer += e.Character;
                     }
             }
-            /*else if (e.Character.ToString().ToLower().Equals("y"))
-            {
-                _P.chatMode = ChatMessageType.SayAll;
-            }else if (e.Character.ToString().ToLower().Equals("u"))
-                _P.chatMode = _P.playerTeam == PlayerTeam.Red ? ChatMessageType.SayRedTeam : ChatMessageType.SayBlueTeam;
-            */
         }
 
         private void HandleInput(Buttons input)
@@ -420,16 +382,19 @@ namespace Infiniminer.States
                     break;
                 case Buttons.Tool1:
                     _P.playerToolSelected = 0;
+                    _P.PlaySound(InfiniminerSound.ClickLow);
                     if (_P.playerToolSelected >= _P.playerTools.Length)
                         _P.playerToolSelected = _P.playerTools.Length - 1;
                     break;
                 case Buttons.Tool2:
                     _P.playerToolSelected = 1;
+                    _P.PlaySound(InfiniminerSound.ClickLow);
                     if (_P.playerToolSelected >= _P.playerTools.Length)
                         _P.playerToolSelected = _P.playerTools.Length - 1;
                     break;
                 case Buttons.Tool3:
                     _P.playerToolSelected = 2;
+                    _P.PlaySound(InfiniminerSound.ClickLow);
                     if (_P.playerToolSelected >= _P.playerTools.Length)
                         _P.playerToolSelected = _P.playerTools.Length - 1;
                     break;
@@ -582,134 +547,7 @@ namespace Infiniminer.States
                 return;
             }else if (!_P.playerDead)
                 HandleInput((_SM as InfiniminerGame).keyBinds.GetBound(key));
-                
-
-            /*if (key == Keys.Y)
-                _P.chatMode = ChatMessageType.SayAll;
-
-            if (key == Keys.U)
-                _P.chatMode = _P.playerTeam == PlayerTeam.Red ? ChatMessageType.SayRedTeam : ChatMessageType.SayBlueTeam;
-            */
-
-            if (false)//!_P.playerDead)
-            {
-                // Jump!
-                if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.Jump,key))
-                {
-                //if (key == Keys.Space)
-                //{
-                    Vector3 footPosition = _P.playerPosition + new Vector3(0f, -1.5f, 0f);
-                    if (_P.blockEngine.SolidAtPointForPlayer(footPosition) && _P.playerVelocity.Y == 0)
-                    {
-                        _P.playerVelocity.Y = JUMPVELOCITY;
-                        float amountBelowSurface = ((ushort)footPosition.Y) + 1 - footPosition.Y;
-                        _P.playerPosition.Y += amountBelowSurface + 0.01f;
-                    }
-                }
-
-                // Change weapon!
-                if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.ToolUp, key))
-                {
-                //if (key == Keys.E)
-                //{
-                    _P.PlaySound(InfiniminerSound.ClickLow);
-                    _P.playerToolSelected += 1;
-                    if (_P.playerToolSelected >= _P.playerTools.Length)
-                        _P.playerToolSelected = 0;
-                }
-
-                // Change weapon directly!
-                {
-                    bool toolDirect = false;
-                    if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.Tool1,key)){
-                        _P.playerToolSelected = 0;
-                        toolDirect = true;
-                    }else if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.Tool2,key)){
-                        _P.playerToolSelected = 1;
-                        toolDirect = true;
-                    }else if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.Tool3,key)){
-                        _P.playerToolSelected = 2;
-                        toolDirect = true;
-                    }else if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.Tool4,key)){
-                        _P.playerToolSelected = 3;
-                        toolDirect = true;
-                    }else if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.Tool5,key)){
-                        _P.playerToolSelected = 4;
-                        toolDirect = true;
-                    }
-                
-                    if (toolDirect){
-                        _P.PlaySound(InfiniminerSound.ClickLow);
-                        // Make sure we don't go out of bounds
-                        if (_P.playerToolSelected >= _P.playerTools.Length)
-                            _P.playerToolSelected = _P.playerTools.Length - 1;
-                    }
-                }    
-
-                /*if (key == Keys.D1 || key == Keys.D2 || key == Keys.D3 || key == Keys.D4 || key == Keys.D5)
-                {
-                    _P.PlaySound(InfiniminerSound.ClickLow);
-                    switch (key)
-                    {
-                        case Keys.D1:
-                            _P.playerToolSelected = 0; break;
-                        case Keys.D2:
-                            _P.playerToolSelected = 1; break;
-                        case Keys.D3:
-                            _P.playerToolSelected = 2; break;
-                        case Keys.D4:
-                            _P.playerToolSelected = 3; break;
-                        case Keys.D5:
-                            _P.playerToolSelected = 4; break;
-                    }
-                    // Make sure we don't go out of bounds
-                    if (_P.playerToolSelected >= _P.playerTools.Length)
-                        _P.playerToolSelected = _P.playerTools.Length - 1;
-                }*/
-                
-
-                // Change block type!
-                if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.ToolUp, key) && _P.playerTools[_P.playerToolSelected] == PlayerTools.ConstructionGun) // && key == Keys.R
-                {
-                    _P.PlaySound(InfiniminerSound.ClickLow);
-                    _P.playerBlockSelected += 1;
-                    if (_P.playerBlockSelected >= _P.playerBlocks.Length)
-                        _P.playerBlockSelected = 0;
-                }
-
-                // Deposit and withdraw from a bank.
-                if (_P.AtBankTerminal())
-                {
-                    //Now 8 and 9 keys
-                    if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.Deposit,key))//if (key == Keys.D8)
-                    {
-                        _P.DepositOre();
-                        _P.PlaySound(InfiniminerSound.ClickHigh);
-                    }
-                    if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.Withdraw, key)) //if (key == Keys.D9)
-                    {
-                        _P.WithdrawOre();
-                        _P.PlaySound(InfiniminerSound.ClickHigh);
-                    }
-                }
-
-                // Radar pings.
-                if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.Ping,key))// key == Keys.Q)
-                {
-                    NetBuffer msgBuffer = _P.netClient.CreateBuffer();
-                    msgBuffer.Write((byte)InfiniminerMessage.PlayerPing);
-                    msgBuffer.Write(_P.playerMyId);
-                    _P.netClient.SendMessage(msgBuffer, NetChannel.ReliableUnordered);
-                }
-
-                // Change class.
-                if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.ChangeClass,key))//if (key == Keys.M && _P.playerPosition.Y > 64 - Defines.GROUND_LEVEL)
-                    nextState = "Infiniminer.States.ClassSelectionState";
-
-                // Change team.
-                if ((_SM as InfiniminerGame).keyBinds.IsBound(Buttons.ChangeTeam,key))//if (key == Keys.N)
-                    nextState = "Infiniminer.States.TeamSelectionState";
-            }
+            
         }
 
         public override void OnKeyUp(Keys key)
@@ -719,44 +557,11 @@ namespace Infiniminer.States
 
         public override void OnMouseDown(MouseButton button, int x, int y)
         {
-            // If we"re dead, come back to life.
+            // If we're dead, come back to life.
             if (_P.playerDead && _P.screenEffectCounter > 2)
-            {
                 _P.RespawnPlayer();
-            }else if (!_P.playerDead)
-            {
+            else if (!_P.playerDead)
                 HandleInput((_SM as InfiniminerGame).keyBinds.GetBound(button));
-            }
-            /*
-            // If we"re alive, use our currently selected tool!
-            if (!_P.playerDead && _P.playerToolCooldown == 0)
-            {
-                switch (_P.playerTools[_P.playerToolSelected])
-                {
-                    // Disabled as everyone speed-mines now.
-                    //case PlayerTools.Pickaxe:
-                    //    if (_P.playerClass != PlayerClass.Miner)
-                    //        _P.FirePickaxe();
-                    //    break;
-
-                    case PlayerTools.ConstructionGun:
-                        _P.FireConstructionGun(_P.playerBlocks[_P.playerBlockSelected]);//, !(button == MouseButton.LeftButton));//_P.FireConstructionGun(_P.playerBlocks[_P.playerBlockSelected]);
-                        break;
-
-                    case PlayerTools.DeconstructionGun:
-                        _P.FireDeconstructionGun();
-                        break;
-
-                    case PlayerTools.Detonator:
-                        _P.PlaySound(InfiniminerSound.ClickHigh);
-                        _P.FireDetonator();
-                        break;
-
-                    case PlayerTools.ProspectingRadar:
-                        _P.FireRadar();
-                        break;
-                }
-            }*/
         }
 
         public override void OnMouseUp(MouseButton button, int x, int y)
@@ -779,23 +584,6 @@ namespace Infiniminer.States
                 {
                     HandleInput((_SM as InfiniminerGame).keyBinds.GetBound(MouseButton.WheelDown));
                 }
-                return;
-            }
-
-            if (scrollDelta == 120 && _P.playerTools[_P.playerToolSelected] == PlayerTools.ConstructionGun)
-            {
-                _P.PlaySound(InfiniminerSound.ClickLow);
-                _P.playerBlockSelected += 1;
-                if (_P.playerBlockSelected >= _P.playerBlocks.Length)
-                    _P.playerBlockSelected = 0;
-            }
-
-            if (scrollDelta == -120 && _P.playerTools[_P.playerToolSelected] == PlayerTools.ConstructionGun)
-            {
-                _P.PlaySound(InfiniminerSound.ClickLow);
-                _P.playerBlockSelected -= 1;
-                if (_P.playerBlockSelected < 0)
-                    _P.playerBlockSelected = _P.playerBlocks.Length - 1;
             }
         }
     }
