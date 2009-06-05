@@ -52,6 +52,9 @@ namespace Infiniminer
                 return false;
             }
         }
+        public bool AltColours = false;
+        public Color redTeam = new Color();
+        public Color blueTeam = new Color();
         public string Handle = "";
         public uint OreMax = 0;
         public uint WeightMax = 0;
@@ -216,9 +219,9 @@ namespace Infiniminer
                 return;
 
             string textureName = "sprites/tex_sprite_";
-            if (team == PlayerTeam.Red)
+            /*if (team == PlayerTeam.Red&&(!AltColours||redTeam==Defines.IM_RED))
                 textureName += "red_";
-            else
+            else*/
                 textureName += "blue_";
             switch (tool)
             {
@@ -239,7 +242,19 @@ namespace Infiniminer
                     textureName += "pickaxe";
                     break;
             }
-            this.SpriteModel.SetSpriteTexture(gameInstance.Content.Load<Texture2D>(textureName));
+            Texture2D orig = gameInstance.Content.Load<Texture2D>(textureName);
+            if (AltColours)// && ((team == PlayerTeam.Blue && blueTeam != Defines.IM_BLUE) || (team == PlayerTeam.Red && redTeam != Defines.IM_RED)))
+            {
+                Color[] data = new Color[orig.Width * orig.Height];
+                orig.GetData<Color>(data);
+                Texture2D temp = new Texture2D(orig.GraphicsDevice,orig.Width,orig.Height);
+                temp.SetData<Color>(data);
+                Defines.generateShadedTexture(team == PlayerTeam.Blue ? blueTeam : redTeam, orig, ref temp);
+                Console.WriteLine("Team: " + team.ToString() + "; Red col: " + redTeam.ToString() + "; Blue col: " + blueTeam.ToString());
+                this.SpriteModel.SetSpriteTexture(temp);
+            }
+            else
+                this.SpriteModel.SetSpriteTexture(orig);
         }
 
         static uint uniqueId = 0;

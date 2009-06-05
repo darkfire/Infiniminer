@@ -20,3 +20,11 @@ sensitivity = 5
 
 # If this flag is true, all sound for the game will be disabled. This should fix all AllocateFormatAndData crashes.
 nosound = false
+
+#Sets colours and names for teams - SignpostMarv's idea
+#Default red = 222, 24, 24 #240,240,240
+red_name = Red
+red = 222, 24, 24
+#Default blue = 80,150,255 #56, 195, 65
+blue_name = Blue
+blue = 80,150,255

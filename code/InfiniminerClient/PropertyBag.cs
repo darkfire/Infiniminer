@@ -74,6 +74,13 @@ namespace Infiniminer
         public ScreenEffect screenEffect = ScreenEffect.None;
         public double screenEffectCounter = 0;
 
+        //Team colour stuff
+        public bool customColours = false;
+        public Color red = Defines.IM_RED;
+        public Color blue = Defines.IM_BLUE;
+        public string redName = "Red";
+        public string blueName = "Blue";
+
         // Sound stuff.
         public Dictionary<InfiniminerSound, SoundEffect> soundList = new Dictionary<InfiniminerSound, SoundEffect>();
 

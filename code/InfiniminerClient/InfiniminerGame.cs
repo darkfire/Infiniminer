@@ -30,6 +30,11 @@ namespace Infiniminer
         public bool InvertMouseYAxis = false;
         public bool NoSound = false;
         public float mouseSensitivity = 0.005f;
+        public bool customColours = false;
+        public Color red=Defines.IM_RED;
+        public string redName = "Red";
+        public Color blue = Defines.IM_BLUE;
+        public string blueName = "Blue";
 
         public KeyBindHandler keyBinds = new KeyBindHandler();
 
@@ -310,6 +315,9 @@ namespace Infiniminer
                                             propertyBag.playerList[playerId].Handle = playerName;
                                             propertyBag.playerList[playerId].ID = playerId;
                                             propertyBag.playerList[playerId].Alive = playerAlive;
+                                            propertyBag.playerList[playerId].AltColours = customColours;
+                                            propertyBag.playerList[playerId].redTeam = red;
+                                            propertyBag.playerList[playerId].blueTeam = blue;
                                             if (thisIsMe)
                                                 propertyBag.playerMyId = playerId;
                                         }
@@ -462,7 +470,54 @@ namespace Infiniminer
                 volumeLevel = Math.Max(0,Math.Min(1,float.Parse(dataFile.Data["volume"], System.Globalization.CultureInfo.InvariantCulture)));
             if (dataFile.Data.ContainsKey("sensitivity"))
                 mouseSensitivity=Math.Max(0.001f,Math.Min(0.05f,float.Parse(dataFile.Data["sensitivity"], System.Globalization.CultureInfo.InvariantCulture)/1000f));
-            
+            if (dataFile.Data.ContainsKey("red_name"))
+                redName = dataFile.Data["red_name"].Trim();
+            if (dataFile.Data.ContainsKey("blue_name"))
+                blueName = dataFile.Data["blue_name"].Trim();
+
+
+            if (dataFile.Data.ContainsKey("red"))
+            {
+                Color temp = new Color();
+                string[] data = dataFile.Data["red"].Split(',');
+                try
+                {
+                    temp.R = byte.Parse(data[0].Trim());
+                    temp.G = byte.Parse(data[1].Trim());
+                    temp.B = byte.Parse(data[2].Trim());
+                    temp.A = (byte)255;
+                }
+                catch {
+                    Console.WriteLine("Invalid colour values for red");
+                }
+                if (temp.A != 0)
+                {
+                    red = temp;
+                    customColours = true;
+                }
+            }
+
+            if (dataFile.Data.ContainsKey("blue"))
+            {
+                Color temp = new Color();
+                string[] data = dataFile.Data["blue"].Split(',');
+                try
+                {
+                    temp.R = byte.Parse(data[0].Trim());
+                    temp.G = byte.Parse(data[1].Trim());
+                    temp.B = byte.Parse(data[2].Trim());
+                    temp.A = (byte)255;
+                }
+                catch {
+                    Console.WriteLine("Invalid colour values for blue");
+                }
+                if (temp.A != 0)
+                {
+                    blue = temp;
+                    customColours = true;
+                }
+            }
+
             //Now to read the key bindings
             if (!File.Exists("keymap.txt"))
             {
@@ -524,6 +579,10 @@ namespace Infiniminer
             propertyBag.volumeLevel = volumeLevel;
             propertyBag.mouseSensitivity = mouseSensitivity;
             propertyBag.keyBinds = keyBinds;
+            propertyBag.blue = blue;
+            propertyBag.red = red;
+            propertyBag.blueName = blueName;
+            propertyBag.redName = redName;
             msgBuffer = propertyBag.netClient.CreateBuffer();
         }
 
