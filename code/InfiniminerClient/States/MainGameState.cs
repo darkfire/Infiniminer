@@ -347,7 +347,7 @@ namespace Infiniminer.States
             {
                 //Chat delay to avoid entering the "start chat" key, an unfortunate side effect of the new key bind system
                 TimeSpan diff = DateTime.Now - startChat;
-                if (diff.Milliseconds > 2)
+                if (diff.Milliseconds >= 2)
                     if (!(Keyboard.GetState().IsKeyDown(Keys.LeftControl) || Keyboard.GetState().IsKeyDown(Keys.RightControl)))
                     {
                         _P.chatEntryBuffer += e.Character;
@@ -458,9 +458,9 @@ namespace Infiniminer.States
                     if (_P.playerTools[_P.playerToolSelected] == PlayerTools.ConstructionGun)
                     {
                         _P.PlaySound(InfiniminerSound.ClickLow);
-                        _P.playerBlockSelected += 1;
-                        if (_P.playerBlockSelected >= _P.playerBlocks.Length)
-                            _P.playerBlockSelected = 0;
+                        _P.playerBlockSelected -= 1;
+                        if (_P.playerBlockSelected < 0)
+                            _P.playerBlockSelected = _P.playerBlocks.Length-1;
                     }
                     break;
                 case Buttons.Deposit:
