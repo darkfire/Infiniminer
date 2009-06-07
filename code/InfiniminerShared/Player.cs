@@ -55,6 +55,7 @@ namespace Infiniminer
         public bool AltColours = false;
         public Color redTeam = new Color();
         public Color blueTeam = new Color();
+        public bool compression = false;
         public string Handle = "";
         public uint OreMax = 0;
         public uint WeightMax = 0;

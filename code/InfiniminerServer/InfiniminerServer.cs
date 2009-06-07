@@ -1538,6 +1538,13 @@ namespace Infiniminer
                                         if (admins.ContainsKey(newPlayer.IP))
                                             newPlayer.admin = admins[newPlayer.IP];
                                         playerList[msgSender] = newPlayer;
+                                        //Check if we should compress the map for the client
+                                        try
+                                        {
+                                            bool compression = msgBuffer.ReadBoolean();
+                                            if (compression)
+                                                playerList[msgSender].compression = true;
+                                        } catch { }
                                         toGreet.Add(msgSender);
                                         this.netServer.SanityCheck(msgSender);
                                         msgSender.Approve();
@@ -2496,7 +2503,7 @@ namespace Infiniminer
 
         public void SendCurrentMap(NetConnection client)
         {
-            MapSender ms = new MapSender(client, this, netServer, MAPSIZE);
+            MapSender ms = new MapSender(client, this, netServer, MAPSIZE,playerList[client].compression);
             mapSendingProgress.Add(ms);
         }
 

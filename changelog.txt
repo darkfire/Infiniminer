@@ -11,6 +11,7 @@ Featuers:
 		-I changed the death messages back to the originals but still left the new ones commented
 		-Added an extra help message about banks being indestructible
 		-Made it so that the "damage" effect and landing sound is not played for landing on jump blocks without dying - makes jump courses easier to bear
+		-Map compression is enabled! If a server and a client from this branch connect they will save bandwidth - this does not affect connections with unmodified clients/servers either.
 	-Nametags
 		-Now coloured the team's colour instead of white
 		-The other team's players get nametags too, which will appear when you're close and can see them

@@ -63,6 +63,9 @@ namespace Infiniminer
             connectBuffer.Write(propertyBag.playerHandle);
             connectBuffer.Write(Defines.INFINIMINER_VERSION);
 
+            //Compression - will be ignored by regular servers
+            connectBuffer.Write(true);
+
             // Connect to the server.
             propertyBag.netClient.Connect(serverEndPoint, connectBuffer.ToArray());
         }
@@ -173,30 +176,67 @@ namespace Infiniminer
                                     case InfiniminerMessage.BlockBulkTransfer:
                                         {
                                             anyPacketsReceived = true;
-                                            byte x = msgBuffer.ReadByte();
-                                            byte y = msgBuffer.ReadByte();
-                                            propertyBag.mapLoadProgress[x, y] = true;
-                                            for (byte dy = 0; dy < 16; dy++)
-                                                for (byte z = 0; z < 64; z++)
-                                                {
-                                                    BlockType blockType = (BlockType)msgBuffer.ReadByte();
-                                                    if (blockType != BlockType.None)
-                                                        propertyBag.blockEngine.downloadList[x, y + dy, z] = blockType;
-                                                }
-                                            bool downloadComplete = true;
-                                            for (x = 0; x < 64; x++)
-                                                for (y = 0; y < 64; y += 16)
-                                                    if (propertyBag.mapLoadProgress[x, y] == false)
-                                                    {
-                                                        downloadComplete = false;
-                                                        break;
-                                                    }
-                                            if (downloadComplete)
+
+                                            try
                                             {
-                                                ChangeState("Infiniminer.States.TeamSelectionState");
-                                                if (!NoSound)
-                                                    MediaPlayer.Stop();
-                                                propertyBag.blockEngine.DownloadComplete();
+                                                //This is either the compression flag or the x coordiante
+                                                byte isCompressed = msgBuffer.ReadByte();
+                                                byte x;
+                                                byte y;
+
+                                                //255 was used because it exceeds the map size - of course, bytes won't work anyway if map sizes are allowed to be this big, so this method is a non-issue
+                                                if (isCompressed == 255)
+                                                {
+                                                    var compressed = msgBuffer.ReadBytes(msgBuffer.LengthBytes - msgBuffer.Position / 8);
+                                                    var compressedstream = new System.IO.MemoryStream(compressed);
+                                                    var decompresser = new System.IO.Compression.GZipStream(compressedstream, System.IO.Compression.CompressionMode.Decompress);
+
+                                                    x = (byte)decompresser.ReadByte();
+                                                    y = (byte)decompresser.ReadByte();
+                                                    propertyBag.mapLoadProgress[x, y] = true;
+                                                    for (byte dy = 0; dy < 16; dy++)
+                                                        for (byte z = 0; z < 64; z++)
+                                                        {
+                                                            BlockType blockType = (BlockType)decompresser.ReadByte();
+                                                            if (blockType != BlockType.None)
+                                                                propertyBag.blockEngine.downloadList[x, y + dy, z] = blockType;
+                                                        }
+                                                }
+                                                else
+                                                {
+                                                    x = isCompressed;
+                                                    y = msgBuffer.ReadByte();
+                                                    propertyBag.mapLoadProgress[x, y] = true;
+                                                    for (byte dy = 0; dy < 16; dy++)
+                                                        for (byte z = 0; z < 64; z++)
+                                                        {
+                                                            BlockType blockType = (BlockType)msgBuffer.ReadByte();
+                                                            if (blockType != BlockType.None)
+                                                                propertyBag.blockEngine.downloadList[x, y + dy, z] = blockType;
+                                                        }
+                                                }
+                                                bool downloadComplete = true;
+                                                for (x = 0; x < 64; x++)
+                                                    for (y = 0; y < 64; y += 16)
+                                                        if (propertyBag.mapLoadProgress[x, y] == false)
+                                                        {
+                                                            downloadComplete = false;
+                                                            break;
+                                                        }
+                                                if (downloadComplete)
+                                                {
+                                                    ChangeState("Infiniminer.States.TeamSelectionState");
+                                                    if (!NoSound)
+                                                        MediaPlayer.Stop();
+                                                    propertyBag.blockEngine.DownloadComplete();
+                                                }
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                Console.OpenStandardError();
+                                                Console.Error.WriteLine(e.Message);
+                                                Console.Error.WriteLine(e.StackTrace);
+                                                Console.Error.Close();
                                             }
                                         }
                                         break;

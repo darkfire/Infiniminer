@@ -101,15 +101,15 @@ namespace Infiniminer
 
         public static void generateShadedTexture(Color col, Texture2D bsprite, ref Texture2D target)
         {
-            System.Console.WriteLine("Input colour: " + col.ToString());
+            //System.Console.WriteLine("Input colour: " + col.ToString());
             try
             {
                 Color[] shades = generateShades(col);
-                System.Console.WriteLine("Output colours: " + shades[0]);
+                /*System.Console.WriteLine("Output colours: " + shades[0]);
                 System.Console.WriteLine("\t" + shades[1]);
                 System.Console.WriteLine("\t" + shades[2]);
                 System.Console.WriteLine("\t" + shades[3]);
-                System.Console.WriteLine("\t" + shades[4]);
+                System.Console.WriteLine("\t" + shades[4]);*/
                 Color[] colArray = new Color[bsprite.Width * bsprite.Height];
                 bsprite.GetData<Color>(colArray);
                 for (int c = 0; c < colArray.Length; c++)
@@ -132,7 +132,7 @@ namespace Infiniminer
                 System.Console.WriteLine(e.StackTrace);
                 System.Console.Error.Close();
             }
-            System.Console.WriteLine("Finished texture shading!");
+            //System.Console.WriteLine("Finished texture shading!");
         }
 
         public static string Sanitize(string input)
