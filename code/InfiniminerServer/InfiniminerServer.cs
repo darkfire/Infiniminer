@@ -490,6 +490,8 @@ namespace Infiniminer
         {
             if (authority == 0)
                 return false;
+            if (sender != null)
+                sender.admin = GetAdmin(sender.IP);
             string[] args = input.Split(' '.ToString().ToCharArray(),2);
             if (args[0].StartsWith("\\") && args[0].Length > 1)
                 args[0] = args[0].Substring(1);
@@ -924,6 +926,13 @@ namespace Infiniminer
             }
         }
 
+        public short GetAdmin(string ip)
+        {
+            if (admins.ContainsKey(ip.Trim()))
+                return admins[ip.Trim()];
+            return (short)0;
+        }
+
         public void AdminPlayer(string ip)
         {
             AdminPlayer(ip, false,(short)2);
@@ -948,7 +957,7 @@ namespace Infiniminer
                     }
                 }
             }
-            if (admins.ContainsKey(realIp))
+            if (!admins.ContainsKey(realIp))
             {
                 admins.Add(realIp,authority);
                 SaveAdminList();
@@ -1581,7 +1590,7 @@ namespace Infiniminer
                                                 // Read the data from the packet.
                                                 ChatMessageType chatType = (ChatMessageType)msgBuffer.ReadByte();
                                                 string chatString = Defines.Sanitize(msgBuffer.ReadString());
-                                                if (!ProcessCommand(chatString,playerList[msgSender].admin,playerList[msgSender]))
+                                                if (!ProcessCommand(chatString,GetAdmin(playerList[msgSender].IP),playerList[msgSender]))
                                                 {
                                                     ConsoleWrite("CHAT: (" + player.Handle + ") " + chatString);
 

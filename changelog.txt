@@ -38,6 +38,7 @@ Featuers:
 		-Changed the way ips are outputted by the "players" command - they are now put on the next line, so that people with rediculously long names don't obscure their ip address for kicking/banning
 		-Made the server tell all players that it's changing map so when they disconnect they don't think it crashed
 		-Made server console output whether the level file to load was found or not
+		-Ability to assign admins who can then prefix commands with \ for full server console access!
 	-Other
 		-Help menu updated to reflect new key layout
 		-Server browser dims servers that are full
