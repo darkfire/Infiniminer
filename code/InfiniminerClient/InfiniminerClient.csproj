@@ -108,6 +108,7 @@
     <Compile Include="PropertyBag.cs" />
     <Compile Include="ServerInformation.cs" />
     <Compile Include="Engines\SkyboxEngine.cs" />
+    <Compile Include="StateMasher\FPSCounter.cs" />
     <Compile Include="StateMasher\State.cs" />
     <Compile Include="StateMasher\StateMachine.cs" />
     <Compile Include="States\ClassSelectionState.cs" />

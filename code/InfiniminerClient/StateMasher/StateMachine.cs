@@ -36,10 +36,10 @@ namespace StateMasher
         private bool needToRenderOnEnter = false;
 
         private int frameCount = 0;
-        private double frameRate = 0;
+        private FPSCounter fpsCounter = new FPSCounter();
         public double FrameRate
         {
-            get { return frameRate; }
+            get { return fpsCounter.fps(); }
         }
 
         //private Dictionary<Keys, bool> keysDown = new Dictionary<Keys, bool>();
@@ -114,8 +114,7 @@ namespace StateMasher
 
         protected override void Update(GameTime gameTime)
         {
-            if (frameCount > 0)
-                frameRate = frameCount / gameTime.TotalRealTime.TotalSeconds;
+            fpsCounter.frame((uint)gameTime.TotalRealTime.Milliseconds + (uint)gameTime.TotalRealTime.Seconds * 1000 + (uint)gameTime.TotalRealTime.Minutes * 60000 + (uint)gameTime.TotalRealTime.Hours * 3600000);
 
             if (currentState != null && propertyBag != null)
             {
