@@ -19,6 +19,7 @@ namespace Infiniminer
         int lavaBlockCount = 0;
         uint oreFactor = 10;
         uint prevMaxPlayers = 16;
+        int autosaveTimer = 5;
         bool includeLava = true;
         string levelToLoad = "";
         string greeter = "";
@@ -79,6 +80,7 @@ namespace Infiniminer
             //Int bindings
             varBind("maxplayers", "Maximum player count", 16);
             varBind("explosionradius", "The radius of spherical tnt explosions", 3);
+            varBind("autosaveTimer", "The time in minutes between autosaves", 5);
         }
 
         public void varBind(string name, string desc, bool initVal, bool useAre)
@@ -1442,6 +1444,8 @@ namespace Infiniminer
                 levelToLoad = dataFile.Data["levelname"];
             if (dataFile.Data.ContainsKey("greeter"))
                 varSet("greeter", dataFile.Data["greeter"],true);
+            if (dataFile.Data.ContainsKey("autosave"))
+                autosaveTimer = int.Parse(dataFile.Data["autosave"]);
 
             bool autoannounce = true;
             if (dataFile.Data.ContainsKey("autoannounce"))
@@ -1789,7 +1793,7 @@ namespace Infiniminer
 
                 //Time to backup map?
                 TimeSpan mapUpdateTimeSpan = DateTime.Now - lastMapBackup;
-                if (mapUpdateTimeSpan.TotalMinutes > 5)
+                if (mapUpdateTimeSpan.TotalMinutes > autosaveTimer)
                 {
                     SaveLevel("autoBK.lvl");
                 }

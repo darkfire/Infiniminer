@@ -43,3 +43,6 @@ autoload = false
 
 # If set, this message will be sent to newcomers - [name] will be replace with their name
 greeter = Welcome [name] to my server!
+
+# Sets the number of minutes between autosaves
+autosave = 5
