@@ -14,6 +14,9 @@ using Microsoft.Xna.Framework.Net;
 using Microsoft.Xna.Framework.Storage;
 using Lidgren.Network;
 using Lidgren.Network.Xna;
+using System.Xml.Linq;
+using System.Linq;
+using LINQtoCSV;
 
 namespace Infiniminer
 {
@@ -116,6 +119,11 @@ namespace Infiniminer
                         }
                     }
                 }
+                XDocument doc = XDocument.Load("http://www.infiniminer.org/servers.xml");
+                var servers = from server in doc.Descendants("server")
+                              select new ServerInformation(server);
+
+                serverList.AddRange(servers);
             }
             catch (Exception)
             {

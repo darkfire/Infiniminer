@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Net;
 using Lidgren.Network;
+using System.Xml.Linq;
 
 namespace Infiniminer
 {
@@ -14,6 +15,16 @@ namespace Infiniminer
         public string numPlayers;
         public string maxPlayers;
         public bool lanServer;
+
+        public ServerInformation(XElement server)
+        {
+            serverName = server.Element("name").Value;
+            numPlayers = server.Element("players").Value;
+            maxPlayers = server.Element("maxPlayers").Value;
+            ipEndPoint = new IPEndPoint(IPAddress.Parse(server.Element("ip").Value), int.Parse(server.Element("port").Value));
+            lanServer = false;
+            serverExtra = server.Element("extra").Value;
+        }
 
         public ServerInformation(NetBuffer netBuffer)
         {
